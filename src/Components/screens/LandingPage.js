@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 const LandingPage = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to the Self-Development Course App!</Text>
+      <Text style={styles.title}>Welcome to the Peaceful Riches App!</Text>
       <View style={styles.contentContainer}>
         <View style={styles.textBox}>
           {/* Add your text input component here */}
