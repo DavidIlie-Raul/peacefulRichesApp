@@ -1,42 +1,25 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import QuickLinksFourButtons from '../common/QuickLinksFourButtons';
 
 const LandingPage = () => {
   return (
+    <ScrollView>
     <View style={styles.container}>
+      <Image style={styles.bigBannerImage} source={require('../../images/Varianta2-10.png')}></Image>
       <Text style={styles.title}>Welcome to the Peaceful Riches App!</Text>
       <View style={styles.contentContainer}>
         <View style={styles.textBox}>
-          {/* Add your text input component here */}
+          <Text style={styles.textBoxText}>Welcome to the Peaceful Riches App! 
+          Below you can see some information about the app to get you started!
+          And a few links!
+          
+          </Text>
         </View>
-        <View style={styles.gridContainer}>
-          <View style={styles.gridItem}>
-            <Image source={require('../../images/image1.png')} style={styles.image} />
-            <View style={styles.banner}>
-              <Text style={styles.bannerText}>Button 1</Text>
-            </View>
-          </View>
-          <View style={styles.gridItem}>
-            <Image source={require('../../images/image2.png')} style={styles.image} />
-            <View style={styles.banner}>
-              <Text style={styles.bannerText}>Button 2</Text>
-            </View>
-          </View>
-          <View style={styles.gridItem}>
-            <Image source={require('../../images/image3.png')} style={styles.image} />
-            <View style={styles.banner}>
-              <Text style={styles.bannerText}>Button 3</Text>
-            </View>
-          </View>
-          <View style={styles.gridItem}>
-            <Image source={require('../../images/image4.png')} style={styles.image} />
-            <View style={styles.banner}>
-              <Text style={styles.bannerText}>Button 4</Text>
-            </View>
-          </View>
-        </View>
+        <QuickLinksFourButtons></QuickLinksFourButtons>
       </View>
     </View>
+    </ScrollView>
   );
 };
 
@@ -46,6 +29,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: 'whitesmoke',
   },
   contentContainer: {
     flex: 1,
@@ -60,10 +44,14 @@ const styles = StyleSheet.create({
   },
   textBox: {
     width: '80%',
-    height: 40,
+    height: 80,
     borderRadius: 8,
-    backgroundColor: '#eee',
+    backgroundColor: 'whitesmoke',
     marginVertical: 32,
+    textAlign: 'center',
+  },
+  textBoxText: {
+    textAlign: 'center',
   },
   gridContainer: {
     flexDirection: 'row',
@@ -79,7 +67,9 @@ const styles = StyleSheet.create({
   },
   image: {
     flex: 1,
-    resizeMode: 'cover',
+    resizeMode: 'stretch',
+    maxWidth: '100%',
+    maxHeight: '100%',
   },
   banner: {
     position: 'absolute',
@@ -94,6 +84,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  bigBannerImage: {
+
+maxWidth: '95%',
+maxHeight: 200,
+resizeMode: 'center',
+marginTop: '10%',
+
   },
 });
 
