@@ -1,41 +1,56 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, VirtualizedList } from 'react-native';
 import QuickLinksFourButtons from '../common/QuickLinksFourButtons';
+import UpperBanner from '../PageSections/upperBanner';
+
 
 const LandingPage = () => {
   return (
     <ScrollView>
-    <View style={styles.container}>
-      <Image style={styles.bigBannerImage} source={require('../../images/Varianta2-10.png')}></Image>
-      <Text style={styles.title}>Welcome to the Peaceful Riches App!</Text>
-      <View style={styles.contentContainer}>
-        <View style={styles.textBox}>
-          <Text style={styles.textBoxText}>Welcome to the Peaceful Riches App! 
-          Below you can see some information about the app to get you started!
-          And a few links!
-          
-          </Text>
-        </View>
-        <QuickLinksFourButtons></QuickLinksFourButtons>
+      <View style={styles.container}>
+      
+      <View style={styles.upperContainer}>
+      <UpperBanner></UpperBanner>
       </View>
+        
+      <View style={styles.lowerContainer}>
+    
+    <View style={styles.textBox}>
+          <Text style={styles.textBoxText}>Welcome to the Peaceful Riches Community! </Text>
+          <Text style={styles.textBoxTextTwo}>Let's get you started!</Text>
+          </View>
+      </View>
+      <View style={styles.buttonContainer}>
+    <QuickLinksFourButtons></QuickLinksFourButtons>
+    </View>
+      
     </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  
   container: {
-    flex: 1,
+    flex: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'whitesmoke',
+    backgroundColor: 'white',
+    
   },
-  contentContainer: {
-    flex: 1,
+
+  lowerContainer: {
+    
     alignItems: 'center',
-    marginTop: 32,
+    
   },
+
+  buttonContainer: {
+
+marginTop: 100,
+
+  },
+    
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -45,13 +60,24 @@ const styles = StyleSheet.create({
   textBox: {
     width: '80%',
     height: 80,
-    borderRadius: 8,
-    backgroundColor: 'whitesmoke',
-    marginVertical: 32,
+    backgroundColor: 'transparent',
+    marginTop: 32,
     textAlign: 'center',
+    height: 150,
   },
   textBoxText: {
+    height: '100%',
     textAlign: 'center',
+    fontFamily: 'Nimbus-Sans-Bold',
+    fontSize: 22,
+    color: '#707070',
+  },
+  textBoxTextTwo: {
+    height: '100%',
+    textAlign: 'center',
+    fontFamily: 'Nimbus-Sans-Bold',
+    fontSize: 22,
+    color: '#707070',
   },
   gridContainer: {
     flexDirection: 'row',
