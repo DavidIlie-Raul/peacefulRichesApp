@@ -1,10 +1,16 @@
 import React, { useState } from "react";
-import { TouchableOpacity, Text, StyleSheet, Linking } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  Linking,
+  View,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
-const CustomButton = ({ title, destination, url }) => {
+const CustomButtonV2 = ({ title, destination, url }) => {
   const [buttonColor, setButtonColor] = useState("transparent");
   const navigation = useNavigation();
   const handleButtonPress = () => {
@@ -32,18 +38,14 @@ const CustomButton = ({ title, destination, url }) => {
   const pressFunctionality = () => {};
 
   return (
-    <LinearGradient
-      colors={["#D954E5", "#C182F9"]}
-      style={styles.gradientStyle}
-      locations={[0.5, 1]}
-    >
+    <View style={styles.buttonBackground}>
       <TouchableOpacity
         style={[styles.button, { backgroundColor: buttonColor }]}
         onPress={handleButtonPress}
       >
         <Text style={styles.buttonText}>{title}</Text>
       </TouchableOpacity>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -51,18 +53,23 @@ const styles = StyleSheet.create({
   button: {
     padding: 10,
     borderRadius: 20,
-    backgroundColor: "transparent",
+    backgroundColor: "black",
     alignItems: "center",
     justifyContent: "center",
     height: 40,
-    maxWidth: 150,
+    maxWidth: "100%",
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: "black",
     fontSize: 13,
     fontFamily: "Nimbus-Sans-Bold",
     textAlign: "center",
     verticalAlign: "middle",
+  },
+  buttonBackground: {
+    width: "100%",
+    borderTopColor: "black",
+    borderTopWidth: 2,
   },
   gradientStyle: {
     borderRadius: 16,
@@ -70,4 +77,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomButton;
+export default CustomButtonV2;
