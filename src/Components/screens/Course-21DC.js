@@ -29,11 +29,16 @@ const Course21DC = () => {
     "Inspired Action",
   ];
 
+  const courseName = "THE 21 DAY CHALLENGE";
+
   const navigation = useNavigation();
 
-  const navigateToSession = (index) => {
+  const navigateToSession = (index, courseName) => {
     // Assuming you have a screen named SessionPage where the session content is displayed
-    navigation.navigate("SessionPage", { sessionIndex: index });
+    navigation.navigate("SessionPage", {
+      sessionIndex: index,
+      courseName: courseName,
+    });
   };
 
   return (
@@ -66,7 +71,7 @@ const Course21DC = () => {
                 <CustomButtonV3
                   title={`#${index + 1} ${session}`}
                   destination={`PR12DC-${index + 1}`}
-                  onPress={() => navigateToSession(index)}
+                  onPress={() => navigateToSession(index, courseName)}
                 ></CustomButtonV3>
               </View>
             ))}
