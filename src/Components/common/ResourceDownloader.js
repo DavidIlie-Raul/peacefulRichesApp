@@ -2,20 +2,16 @@ import React, { useState } from "react";
 import {
   Text,
   View,
-  Image,
   StyleSheet,
   TouchableOpacity,
-  Linking,
   Platform,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { FontAwesome, AntDesign, Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
 import { shareAsync } from "expo-sharing";
 
 const ResourceDownloader = ({ title, onPress, type, linktoDownload }) => {
   const [buttonColor, setButtonColor] = useState("transparent");
-  const navigation = useNavigation();
   const icon = "exclamation";
   const IconTypeObject = () => {
     if (type === "pdf") {
@@ -28,7 +24,7 @@ const ResourceDownloader = ({ title, onPress, type, linktoDownload }) => {
   const handleDownload = async () => {
     const filename = "test.pdf";
     const result = await FileSystem.downloadAsync(
-      "https://replit.com/@DavidIlie2/backEndPRWS#test.pdf",
+      linktoDownload,
       FileSystem.documentDirectory + filename
     );
 

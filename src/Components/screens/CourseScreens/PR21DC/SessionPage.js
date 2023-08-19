@@ -9,13 +9,17 @@ import ResourceDownloader from "../../../common/ResourceDownloader";
 const sessionData = [
   {
     title: "The Right to be Rich",
-    description: "Description for session 1",
+    description:
+      "The concept of the right to be rich resonates with principles of personal autonomy and self-determination. It maintains that everyone should be empowered to pursue economic success according to their skills, ideas, and diligence. By acknowledging this right, societies are positioned to unlock the full potential of their citizens, fostering an environment of economic growth, job creation, and improved living standards.",
+    downloadableTitle: "The Right to be Rich",
     downloadableType: "pdf",
     downloadableLink:
       "https://www.learningcontainer.com/wp-content/uploads/2019/09/sample-pdf-file.pdf",
-    youtubeLink:
-      "https://player.vimeo.com/video/798037751?h=37865a149b&title=0&byline=0&portrait=0",
-    youtubeResourcesLink: "https://www.youtube.com/embed/hOa4hs4Qksk",
+    downloadableTwoTitle: "mp4 file",
+    downloadableTwoType: "audio",
+    downloadableTwoLink:
+      "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4",
+    youtubeLink: "https://www.youtube.com/embed/S-ztoGpA7a4",
     // ... other data for session 1
   },
   // ... continue adding data for remaining sessions
@@ -25,6 +29,25 @@ const SessionPage = () => {
   const route = useRoute();
   const sessionIndex = route.params?.sessionIndex; // Access the sessionIndex parameter
   const courseName = route.params?.courseName;
+
+  const isThereSecondDownloadable = () => {
+    if (session.downloadableTwoType !== null || undefined) {
+      console.log(
+        "called second downloadable successfully and rendered components"
+      );
+      return (
+        <View style={styles.resourceItem}>
+          <ResourceDownloader
+            type={session.downloadableTwoType}
+            linktoDownload={session.downloadableTwoLink}
+            title={session.downloadableTwoTitle}
+          />
+        </View>
+      );
+    } else {
+      return null; // or any other content you want to render when the condition is not met
+    }
+  };
 
   if (sessionIndex === undefined || courseName === undefined) {
     // Handle the case where sessionIndex or courseName is not provided
@@ -36,14 +59,14 @@ const SessionPage = () => {
 
   return (
     <>
-      <LinearGradient
-        colors={["rgba(130, 180, 249, 0.8)", "white"]}
-        locations={[0, 0.1]} // Adjust the locations as needed
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.container}
-      >
-        <ScrollView>
+      <ScrollView>
+        <LinearGradient
+          colors={["rgba(130, 180, 249, 0.8)", "white"]}
+          locations={[0, 0.08]} // Adjust the locations as needed
+          start={{ x: 0.1, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={styles.container}
+        >
           <View style={styles.upperContainer}>
             <Image
               style={styles.image}
@@ -57,32 +80,32 @@ const SessionPage = () => {
             <Text style={styles.textFour}>{session.description}</Text>
             <View style={styles.horizontalLine}></View>
 
-            <Text style={styles.textThree}>- RESOURCES -</Text>
+            <Text style={styles.textThree}>- RECORDING -</Text>
 
-            <View style={styles.webViewWrapper}>
-              <WebView
-                style={styles.webView}
-                source={{ uri: session.youtubeResourcesLink }}
-              />
-            </View>
             <View style={styles.webViewWrapper}>
               <WebView
                 style={styles.webView}
                 source={{ uri: session.youtubeLink }}
               />
             </View>
+
             <Text style={styles.textThree}>- DOWNLOADS -</Text>
+            <View style={styles.horizontalLine}></View>
             <View style={styles.resourceContainer}>
-              <ResourceDownloader
-                type={session.downloadableType}
-                title={session.title}
-              ></ResourceDownloader>
+              <View style={styles.resourceItem}>
+                <ResourceDownloader
+                  type={session.downloadableType}
+                  title={session.downloadableTitle}
+                  linktoDownload={session.downloadableLink}
+                ></ResourceDownloader>
+              </View>
+              {isThereSecondDownloadable()}
             </View>
 
             <View style={styles.sessionsListFlexContainer}></View>
           </View>
-        </ScrollView>
-      </LinearGradient>
+        </LinearGradient>
+      </ScrollView>
     </>
   );
 };
@@ -95,9 +118,12 @@ const styles = new StyleSheet.create({
     backgroundColor: "white",
   },
   resourceContainer: {
-    height: 40,
+    height: 150,
     width: "80%",
     marginTop: 25,
+  },
+  resourceItem: {
+    marginVertical: 15,
   },
   webView: {
     flex: 1,
@@ -167,6 +193,14 @@ const styles = new StyleSheet.create({
     fontSize: 20,
     color: "#4B4B4B",
     marginTop: 60,
+  },
+  textFour: {
+    fontFamily: "Nimbus-Sans-BoldItalic",
+    fontSize: 15,
+    color: "#707070",
+    marginVertical: 15,
+    width: "80%",
+    textAlign: "center",
   },
   image: {
     marginTop: 100,

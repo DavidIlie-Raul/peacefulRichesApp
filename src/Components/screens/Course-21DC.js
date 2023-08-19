@@ -41,14 +41,14 @@ const Course21DC = () => {
   };
 
   return (
-    <LinearGradient
-      colors={["rgba(130, 180, 249, 0.8)", "white"]}
-      locations={[0, 0.1]} // Adjust the locations as needed
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      style={styles.container}
-    >
-      <ScrollView>
+    <ScrollView>
+      <LinearGradient
+        colors={["rgba(130, 180, 249, 0.8)", "white"]}
+        locations={[0, 0.06]} // Adjust the locations as needed
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.container}
+      >
         <View style={styles.upperContainer}>
           <Image
             style={styles.image}
@@ -76,8 +76,8 @@ const Course21DC = () => {
             ))}
           </View>
         </View>
-      </ScrollView>
-    </LinearGradient>
+      </LinearGradient>
+    </ScrollView>
   );
 };
 

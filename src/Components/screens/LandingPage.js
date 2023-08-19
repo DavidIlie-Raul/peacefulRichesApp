@@ -35,7 +35,7 @@ const LandingPage = () => {
             ></HomePageButtons>
             <HomePageButtons
               widgetTextContent={"Check out the Courses!"}
-              btnDestination={"Course"}
+              btnDestination={"Courses"}
             ></HomePageButtons>
           </View>
         </View>

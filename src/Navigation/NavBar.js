@@ -7,7 +7,10 @@ import LandingPage from "../Components/screens/LandingPage.js";
 import CoursePage from "../Components/screens/CoursePage.js";
 import NewsPage from "../Components/screens/NewsPage.js";
 import Course21DC from "../Components/screens/Course-21DC.js";
-import { createStackNavigator } from "@react-navigation/stack";
+import {
+  createStackNavigator,
+  TransitionPresets,
+} from "@react-navigation/stack";
 import SessionPage from "../Components/screens/CourseScreens/PR21DC/SessionPage.js";
 
 const Tab = createBottomTabNavigator();
@@ -15,7 +18,16 @@ const Stack = createStackNavigator();
 
 const CourseStack = () => {
   return (
-    <Stack.Navigator initialRouteName="CoursesMain">
+    <Stack.Navigator
+      initialRouteName="CoursesMain"
+      screenOptions={{
+        headerMode: "screen",
+        headerTransparent: true, // Make the header transparent
+        headerTitle: "",
+        headerTintColor: "#D954E5", // Change this to your desired color
+        ...TransitionPresets.SlideFromRightIOS,
+      }}
+    >
       <Stack.Screen
         name="CoursesMain"
         component={CoursePage}
@@ -24,12 +36,12 @@ const CourseStack = () => {
       <Stack.Screen
         name="Course21DC"
         component={Course21DC}
-        options={{ headerShown: false }}
+        options={{ headerShown: true }}
       />
       <Stack.Screen
         name="SessionPage"
         component={SessionPage}
-        options={{ headerShown: false, animationEnabled: true }}
+        options={{ headerShown: true, animationEnabled: true }}
       />
     </Stack.Navigator>
   );
@@ -39,7 +51,13 @@ const NavigationBar = () => {
   return (
     <Tab.Navigator
       initialRouteName="Home"
+      backBehavior="initialRoute"
       screenOptions={({ route }) => ({
+        cardStyleInterpolator:
+          TransitionPresets.SlideFromRightIOS.cardStyleInterpolator,
+        tabBarActiveTintColor: "#D954E5",
+        tabBarInactiveTintColor: "#707070",
+
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
@@ -47,7 +65,7 @@ const NavigationBar = () => {
             iconName = focused ? "home" : "home-outline";
           } else if (route.name === "News") {
             iconName = focused ? "newspaper" : "newspaper-outline";
-          } else if (route.name === "Course") {
+          } else if (route.name === "Courses") {
             iconName = focused ? "book" : "book-outline";
           } else if (route.name === "News") {
             iconName = focused ? "newspaper-o" : "newspaper-o-outline";
@@ -60,7 +78,7 @@ const NavigationBar = () => {
       })}
     >
       <Tab.Screen
-        name="Course"
+        name="Courses"
         component={CourseStack}
         options={{ headerShown: false }}
       />
