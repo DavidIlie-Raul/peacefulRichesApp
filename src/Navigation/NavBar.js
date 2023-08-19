@@ -29,7 +29,7 @@ const CourseStack = () => {
       <Stack.Screen
         name="SessionPage"
         component={SessionPage}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, animationEnabled: true }}
       />
     </Stack.Navigator>
   );

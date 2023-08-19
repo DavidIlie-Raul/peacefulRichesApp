@@ -1,6 +1,5 @@
 import { Text, View, Image, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Colors } from "react-native/Libraries/NewAppScreen";
 import CustomButtonV3 from "../common/CustomButtonV3";
 import { useNavigation } from "@react-navigation/native";
 
