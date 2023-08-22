@@ -18,11 +18,13 @@ const ResourceDownloader = ({ title, onPress, type, linktoDownload }) => {
       return <AntDesign name="pdffile1" size={18} color="black" />;
     } else if (type === "audio") {
       return <Ionicons name="musical-notes-outline" size={18} color="black" />;
+    } else {
+      return <AntDesign name="exclamation" size={18} color="black" />;
     }
   };
 
   const handleDownload = async () => {
-    const filename = "test.pdf";
+    const filename = "download.pdf";
     const result = await FileSystem.downloadAsync(
       linktoDownload,
       FileSystem.documentDirectory + filename

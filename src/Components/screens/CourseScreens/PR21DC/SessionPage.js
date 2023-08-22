@@ -18,8 +18,23 @@ const sessionData = [
     downloadableTwoTitle: "mp4 file",
     downloadableTwoType: "audio",
     downloadableTwoLink:
-      "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4",
+      "https://www.learningcontainer.com/wp-content/uploads/2019/09/sample-pdf-file.pdf",
     youtubeLink: "https://www.youtube.com/embed/S-ztoGpA7a4",
+    // ... other data for session 1
+  },
+  {
+    title: "It's Amazing to be Rich",
+    description:
+      "The concept of the right skill to be rich resonates with principles of personal autonomy and self-determination. It maintains that everyone should be empowered to pursue economic success according to their skills, ideas, and diligence. By acknowledging this right, societies are positioned to unlock the full potential of their citizens, fostering an environment of economic growth, job creation, and improved living standards.",
+    downloadableTitle: "It's Amazing to be Rich",
+    downloadableType: "pdf",
+    downloadableLink:
+      "https://www.learningcontainer.com/wp-content/uploads/2019/09/sample-pdf-file.pdf",
+    downloadableTwoTitle: "mp4 file",
+    downloadableTwoType: "audio",
+    downloadableTwoLink:
+      "https://www.learningcontainer.com/wp-content/uploads/2019/09/sample-pdf-file.pdf",
+    youtubeLink: "https://www.youtube.com/embed/H_0_c6R_KKs",
     // ... other data for session 1
   },
   // ... continue adding data for remaining sessions
