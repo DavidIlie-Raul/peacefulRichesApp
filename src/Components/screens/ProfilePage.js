@@ -9,8 +9,10 @@ import {
 } from "react-native";
 import UpperBanner from "../PageSections/upperBanner";
 import HomePageButtons from "../common/HomePageButtonImage";
+import ProfileWidget from "../common/ProfileWidget";
+import UserStatsWidget from "../common/UserStatsWidget";
 
-const LandingPage = () => {
+const Profile = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -20,23 +22,24 @@ const LandingPage = () => {
 
         <View style={styles.lowerContainer}>
           <View style={styles.textBox}>
-            <Text style={styles.textBoxFirstText}>
-              Welcome to the Peaceful Riches Community!{" "}
-            </Text>
-            <Text style={styles.textBoxSecondText}>Let's get you started!</Text>
+            <Text style={styles.textBoxFirstText}>Account </Text>
             <View style={styles.horizontalLine} />
+            <Text style={styles.textBoxSecondText}>
+              Currently signed in as:
+            </Text>
           </View>
 
-          <View style={styles.buttonContainer}>
-            <HomePageButtons
-              widgetTextContent={"Check out the Chat!"}
-              btnDestination={"Chat"}
-            ></HomePageButtons>
-            <HomePageButtons
-              widgetTextContent={"Check out the Courses!"}
-              btnDestination={"Courses"}
-            ></HomePageButtons>
+          <View style={styles.profileWidgetContainer}>
+            <ProfileWidget></ProfileWidget>
           </View>
+
+          <View style={styles.statsContainer}>
+            <UserStatsWidget statType={"dateJoined"}></UserStatsWidget>
+            <UserStatsWidget statType={"coursesCompleted"}></UserStatsWidget>
+          </View>
+          <Text style={styles.creditText}>
+            Developed by David Ilie Raul - for the Peaceful Riches Community
+          </Text>
         </View>
       </View>
     </ScrollView>
@@ -52,7 +55,11 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
-  upperContainer: {},
+  profileWidgetContainer: {
+    maxHeight: 250,
+    maxWidth: "80%",
+    marginTop: 30,
+  },
 
   lowerContainer: {
     alignItems: "center",
@@ -65,9 +72,10 @@ const styles = StyleSheet.create({
     marginTop: "8%",
   },
 
-  buttonContainer: {
+  statsContainer: {
     display: "flex",
     flexDirection: "row",
+    marginVertical: 60,
   },
 
   svg: {
@@ -91,18 +99,26 @@ const styles = StyleSheet.create({
     marginTop: 32,
     textAlign: "center",
   },
+  creditText: {
+    textAlign: "center",
+    color: "#CDCDCD",
+    marginVertical: 15,
+    fontFamily: "Nimbus-Sans-Bold",
+    fontSize: 10,
+  },
+
   textBoxFirstText: {
     fontFamily: "Nimbus-Sans-Bold",
     fontSize: 22,
     textAlign: "center",
-    color: "#707070",
+    color: "#4B4B4B",
   },
   textBoxSecondText: {
     fontFamily: "Nimbus-Sans-Bold",
     textAlign: "center",
-    marginTop: 60,
-    fontSize: 22,
-    color: "#4B4B4B",
+    marginTop: 15,
+    fontSize: 18,
+    color: "#707070",
   },
 
   innerTextBox: {
@@ -162,4 +178,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LandingPage;
+export default Profile;

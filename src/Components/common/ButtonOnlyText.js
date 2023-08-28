@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
-const ButtonOnlyText = ({ title, destination, url }) => {
+const ButtonOnlyText = ({ title, destination, url, fontSize, onPress }) => {
   const [buttonColor, setButtonColor] = useState("transparent");
   const navigation = useNavigation();
   const handleButtonPress = () => {
@@ -29,14 +29,14 @@ const ButtonOnlyText = ({ title, destination, url }) => {
     }
   };
 
-  const pressFunctionality = () => {};
+  const dynamicOnPress = onPress ? onPress : handleButtonPress;
 
   return (
     <TouchableOpacity
       style={[styles.button, { backgroundColor: buttonColor }]}
-      onPress={handleButtonPress}
+      onPress={dynamicOnPress}
     >
-      <Text style={styles.buttonText}>{title}</Text>
+      <Text style={[styles.buttonText, { fontSize: fontSize }]}>{title}</Text>
     </TouchableOpacity>
   );
 };
@@ -52,7 +52,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#D954E5",
-    fontSize: 10,
     fontFamily: "Nimbus-Sans-Bold",
     textAlign: "left",
     verticalAlign: "middle",

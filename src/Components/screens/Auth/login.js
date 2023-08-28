@@ -44,9 +44,14 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [checkbox1Checked, setCheckbox1Checked] = useState(false);
   const [checkbox2Checked, setCheckbox2Checked] = useState(false);
+  const [emailValid, setEmailValid] = useState(true);
 
-  const handleSignup = () => {
+  const handleLogin = () => {
     // Here you can add your logic for handling the login
+    const isValid = /\S+@\S+\.\S+/.test(email);
+    if (!isValid) {
+      setEmailValid(false);
+    }
     console.log("Email:", email);
     console.log("Password:", password);
     console.log("Checkbox 1:", checkbox1Checked);
@@ -73,10 +78,18 @@ const Login = () => {
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Email</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { borderColor: emailValid ? "#82B4F9" : "red" },
+                  ]}
                   placeholder="eg. johnsmith@gmail.com"
                   placeholderTextColor="#CDCDCD"
-                  onChangeText={(text) => setEmail(text)}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    // Perform email validation here
+                    const isValid = /\S+@\S+\.\S+/.test(text); // Simple email validation
+                    setEmailValid(isValid);
+                  }}
                   value={email}
                 />
               </View>
@@ -94,6 +107,7 @@ const Login = () => {
                   title={"Forgot Password?"}
                   url={""}
                   destination={"PassReset"}
+                  fontSize={10}
                 ></ButtonOnlyText>
               </View>
 
@@ -101,7 +115,7 @@ const Login = () => {
                 title={"Login"}
                 maxWidth={"50%"}
                 width={"40%"}
-                onPress={handleSignup}
+                onPress={handleLogin}
               ></CustomLoginButton>
               <View style={styles.footerContainer}>
                 <View style={styles.horizontalLine}></View>

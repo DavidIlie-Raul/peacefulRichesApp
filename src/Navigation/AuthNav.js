@@ -37,7 +37,7 @@ const AuthNav = () => {
       <Stack.Screen
         name="Signup"
         component={Signup}
-        options={{ headerShown: true }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

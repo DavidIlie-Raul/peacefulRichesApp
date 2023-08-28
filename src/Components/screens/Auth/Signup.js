@@ -8,6 +8,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import { AntDesign, Entypo } from "@expo/vector-icons";
 import CustomLoginButton from "../../common/CustomLoginButton";
@@ -43,16 +44,40 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [checkbox1Checked, setCheckbox1Checked] = useState(false);
   const [checkbox2Checked, setCheckbox2Checked] = useState(false);
+  const [passwordValid, setPasswordValid] = useState(true);
+  const [emailValid, setEmailValid] = useState(true);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordValid, setConfirmPasswordValid] = useState(true);
 
   const handleSignup = () => {
-    // Here you can add your logic for handling the login
+    // Validate email, password, and confirm password before proceeding
+    const isEmailValid = /\S+@\S+\.\S+/.test(email);
+    const isPasswordValid = /^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/.test(password);
+    const isConfirmPasswordValid = confirmPassword === password;
+
+    if (!isEmailValid) {
+      setEmailValid(false);
+      return;
+    }
+
+    if (!isPasswordValid) {
+      setPasswordValid(false);
+      return;
+    }
+
+    if (!isConfirmPasswordValid) {
+      setConfirmPasswordValid(false);
+      return;
+    }
+
+    // Here you can add your logic for handling the signup
     console.log("Email:", email);
     console.log("Password:", password);
+    console.log("Confirm Password:", confirmPassword);
     console.log("Checkbox 1:", checkbox1Checked);
     console.log("Checkbox 2:", checkbox2Checked);
     // You can make API calls or perform authentication checks here
   };
-
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -72,21 +97,41 @@ const Signup = () => {
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Email</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { borderColor: emailValid ? "#82B4F9" : "red" },
+                  ]}
                   placeholder="eg. johnsmith@gmail.com"
                   placeholderTextColor="#CDCDCD"
-                  onChangeText={(text) => setEmail(text)}
+                  maxLength={50} // Set the maximum character limit
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    // Perform email validation here
+                    const isValid = /\S+@\S+\.\S+/.test(text); // Simple email validation
+                    setEmailValid(isValid);
+                  }}
                   value={email}
                 />
               </View>
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { borderColor: passwordValid ? "#82B4F9" : "red" }, // Update the border color
+                  ]}
                   placeholder=""
                   placeholderTextColor="#CDCDCD"
+                  maxLength={50} // Set the maximum character limit
                   secureTextEntry
-                  onChangeText={(text) => setPassword(text)}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    // Perform password validation here
+                    const isValid = /^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/.test(
+                      text
+                    );
+                    setPasswordValid(isValid);
+                  }}
                   value={password}
                 />
                 <Text style={styles.passGuideText}>
@@ -95,6 +140,28 @@ const Signup = () => {
                   required.
                 </Text>
               </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Confirm Password</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { borderColor: confirmPasswordValid ? "#82B4F9" : "red" },
+                  ]}
+                  placeholder=""
+                  placeholderTextColor="#CDCDCD"
+                  maxLength={50}
+                  secureTextEntry
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    // Perform confirm password validation here
+                    const isValid = text === password;
+                    setConfirmPasswordValid(isValid);
+                  }}
+                  value={confirmPassword}
+                />
+              </View>
+
               <View style={styles.inputGroup}>
                 <CheckboxWithText
                   label="I have read and agree to the Terms and Conditions and Privacy Policy."
@@ -195,7 +262,7 @@ const styles = StyleSheet.create({
   },
 
   midContainer: {
-    height: 900,
+    height: 1000,
     backgroundColor: "white",
     width: 320,
     marginVertical: "20%",
