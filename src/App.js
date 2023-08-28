@@ -32,7 +32,7 @@ class App extends React.Component {
       return null; // Or a loading screen
     }
 
-    isAuthenticated = false;
+    isAuthenticated = true;
 
     if (isAuthenticated === true) {
       return (

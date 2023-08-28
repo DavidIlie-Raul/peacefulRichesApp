@@ -95,6 +95,7 @@ const NavigationBar = () => {
         component={ChatPage}
         options={({ navigation }) => ({
           headerShown: true,
+          tabBarStyle: { display: "none" },
           headerLeft: () => (
             <Ionicons
               name="arrow-back"

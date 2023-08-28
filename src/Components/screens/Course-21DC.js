@@ -2,8 +2,11 @@ import { Text, View, Image, StyleSheet, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import CustomButtonV3 from "../common/CustomButtonV3";
 import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 
 const Course21DC = () => {
+  const [sessionsChecked, setSessionsChecked] = useState([]);
   const sessions = [
     "The Right To Be Rich",
     "It’s Amazing To Be Rich",
@@ -69,9 +72,14 @@ const Course21DC = () => {
                 ></View>
                 <CustomButtonV3
                   title={`#${index + 1} ${session}`}
-                  destination={`PR12DC-${index + 1}`}
+                  isChecked={sessionsChecked[index]} // Pass the isChecked state
+                  onCheckboxPress={() => {
+                    const updatedChecked = [...sessionsChecked];
+                    updatedChecked[index] = !updatedChecked[index];
+                    setSessionsChecked(updatedChecked);
+                  }}
                   onPress={() => navigateToSession(index, courseName)}
-                ></CustomButtonV3>
+                />
               </View>
             ))}
           </View>

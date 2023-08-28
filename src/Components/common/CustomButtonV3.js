@@ -1,16 +1,9 @@
 import React, { useState } from "react";
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  Linking,
-  View,
-} from "react-native";
+import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
-const CustomButtonV3 = ({ title, onPress }) => {
+const CustomButtonV3 = ({ title, onPress, isChecked, onCheckboxPress }) => {
   const [buttonColor, setButtonColor] = useState("transparent");
   const navigation = useNavigation();
 
@@ -20,7 +13,17 @@ const CustomButtonV3 = ({ title, onPress }) => {
         style={[styles.button, { backgroundColor: buttonColor }]}
         onPress={onPress}
       >
-        <Text style={styles.buttonText}>{title}</Text>
+        <View style={styles.checkBoxAndTitleContainer}>
+          <TouchableOpacity onPress={onCheckboxPress}>
+            <Ionicons
+              name={isChecked ? "checkbox" : "checkbox-outline"}
+              size={20}
+              color={isChecked ? "#D954E5" : "#707070"}
+              style={styles.checkbox}
+            />
+          </TouchableOpacity>
+          <Text style={styles.buttonText}>{title}</Text>
+        </View>
         <Ionicons name={"arrow-forward-circle"} size={20} color={"#D954E5"} />
       </TouchableOpacity>
     </View>
@@ -55,6 +58,13 @@ const styles = StyleSheet.create({
   gradientStyle: {
     borderRadius: 16,
     height: 40,
+  },
+  checkbox: {
+    marginLeft: 10,
+  },
+  checkBoxAndTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });
 
