@@ -1,10 +1,22 @@
 import { Text, Image, View, StyleSheet } from "react-native";
 import ButtonOnlyText from "./ButtonOnlyText";
+import PocketBase from "pocketbase";
+import { useAuth } from "../../Utils/AuthContext";
+
+const pb = new PocketBase("http://192.168.0.158:90");
 
 const ProfileWidget = () => {
+  const { setIsLoggedIn } = useAuth();
   const handleLogout = () => {
     //Do Logout Logic Here
+    pb.authStore.clear;
+    if (pb.authStore.model === null) {
+      setIsLoggedIn(false);
+    } else {
+      return console.log("Logout Failed");
+    }
     console.log("logged Out");
+    console.log(pb.authStore.model);
   };
 
   return (

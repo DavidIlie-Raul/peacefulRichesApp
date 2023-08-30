@@ -13,8 +13,13 @@ import {
 import { AntDesign, Entypo } from "@expo/vector-icons";
 import CustomLoginButton from "../../common/CustomLoginButton";
 import CustomButton from "../../common/CustomButton";
+import { useNavigation } from "@react-navigation/native";
+import PocketBase from "pocketbase";
+import { useAuth } from "../../../Utils/AuthContext";
 
-const CheckboxWithText = ({ label, onChange }) => {
+const pb = new PocketBase("http://192.168.0.158:90");
+
+const CheckboxWithText = ({ label, onChange, color }) => {
   const [isChecked, setIsChecked] = useState(false);
 
   const handleCheckboxChange = () => {
@@ -29,9 +34,9 @@ const CheckboxWithText = ({ label, onChange }) => {
     >
       <View style={styles.checkbox}>
         {isChecked ? (
-          <AntDesign name="checkcircle" size={20} color="#D954E5" />
+          <AntDesign name="checkcircle" size={20} color="#82B4F9" />
         ) : (
-          <Entypo name="circle" size={20} color="#82B4F9" />
+          <Entypo name="circle" size={20} color={color || "#82B4F9"} />
         )}
       </View>
       <Text style={styles.checkboxLabel}>{label}</Text>
@@ -40,20 +45,42 @@ const CheckboxWithText = ({ label, onChange }) => {
 };
 
 const Signup = () => {
+  const navigation = useNavigation();
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [isUsernameTaken, setIsUsernameTaken] = useState(false);
   const [password, setPassword] = useState("");
   const [checkbox1Checked, setCheckbox1Checked] = useState(false);
   const [checkbox2Checked, setCheckbox2Checked] = useState(false);
   const [passwordValid, setPasswordValid] = useState(true);
+  const [usernameValid, setUsernameValid] = useState(true);
+  const [isEmailTaken, setIsEmailTaken] = useState(false);
   const [emailValid, setEmailValid] = useState(true);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmPasswordValid, setConfirmPasswordValid] = useState(true);
+  const [inputBorderColor, setInputBorderColor] = useState("");
+  const [checkboxColor, setCheckboxColor] = useState("");
 
-  const handleSignup = () => {
+  const authContext = useAuth();
+
+  const handleSignup = async () => {
+    setIsEmailTaken(false);
+    setIsUsernameTaken(false);
+    setUsernameValid(true);
+    setEmailValid(true);
+    setPasswordValid(true);
+    setConfirmPasswordValid(true);
+    let lowerCaseEmail = email.toLocaleLowerCase();
     // Validate email, password, and confirm password before proceeding
-    const isEmailValid = /\S+@\S+\.\S+/.test(email);
+    const isUsernameValid = /^[a-zA-Z0-9]+$/.test(username);
+    const isEmailValid = /\S+@\S+\.\S+/.test(lowerCaseEmail);
     const isPasswordValid = /^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$/.test(password);
     const isConfirmPasswordValid = confirmPassword === password;
+
+    if (!isUsernameValid) {
+      setUsernameValid(false);
+      return;
+    }
 
     if (!isEmailValid) {
       setEmailValid(false);
@@ -70,13 +97,75 @@ const Signup = () => {
       return;
     }
 
+    if (!checkbox1Checked || !checkbox2Checked) {
+      console.log("agreement boxes not checked, return");
+
+      setCheckboxColor("red");
+      setTimeout(() => {
+        setCheckboxColor("");
+      }, 3000);
+
+      return;
+    }
+
     // Here you can add your logic for handling the signup
-    console.log("Email:", email);
+    console.log("Email:", lowerCaseEmail);
     console.log("Password:", password);
     console.log("Confirm Password:", confirmPassword);
     console.log("Checkbox 1:", checkbox1Checked);
     console.log("Checkbox 2:", checkbox2Checked);
     // You can make API calls or perform authentication checks here
+
+    const signupdata = {
+      username: username,
+      email: lowerCaseEmail,
+      emailVisibility: false,
+      password: password,
+      passwordConfirm: confirmPassword,
+      name: `${username}${Math.floor(Math.random() * 100000) + 1}`,
+    };
+    console.log(signupdata.name);
+    try {
+      const record = await pb.collection("users").create(signupdata);
+
+      setInputBorderColor("green");
+
+      // Wait for 2 seconds then set borders back
+      setTimeout(async () => {
+        setInputBorderColor(""); // Reset the border colors
+      }, 2000);
+
+      try {
+        const authdata = await pb
+          .collection("users")
+          .authWithPassword(lowerCaseEmail, password);
+        console.log(pb.authStore.model, "logged in successfully");
+        if (pb.authStore.model !== null) {
+          authContext.setIsLoggedIn(true); // Set isLoggedIn to true
+        } else {
+          authContext.setIsLoggedIn(false); // Set isLoggedIn to true
+        }
+      } catch (error) {
+        console.log(
+          error,
+          error.data,
+          "could not login, returned errors, redirecting to login page"
+        );
+        navigation.navigate("Login");
+      }
+    } catch (error) {
+      console.log(error.data.data);
+      if (error?.data?.data?.username?.code === "validation_invalid_username") {
+        setIsUsernameTaken(true);
+        return;
+      } else if (
+        error?.data?.data?.email?.code === "validation_invalid_email"
+      ) {
+        setIsEmailTaken(true);
+        console.log("email is taken, set emailtaken to true");
+        return;
+      }
+    }
   };
   return (
     <ScrollView>
@@ -94,12 +183,61 @@ const Signup = () => {
             <View style={styles.horizontalLine}></View>
             <Text style={styles.title}>Signup</Text>
             <View style={styles.formContainer}>
+              {/*Name Input Field*/}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Name</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: inputBorderColor
+                        ? inputBorderColor
+                        : usernameValid
+                        ? "#82B4F9"
+                        : "red",
+                    },
+                  ]}
+                  placeholder="Letters and numbers only, eg. Dave2"
+                  placeholderTextColor="#CDCDCD"
+                  maxLength={50}
+                  onChangeText={(text) => {
+                    setUsername(text);
+                  }}
+                  value={username}
+                />
+                <Text
+                  style={
+                    !usernameValid
+                      ? [styles.passGuideText, { color: "red" }]
+                      : { display: "none" }
+                  }
+                >
+                  Can only contain letters and numbers, no spaces or special
+                  characters (!@#$) eg. davido21
+                </Text>
+                <Text
+                  style={
+                    isUsernameTaken
+                      ? [styles.passGuideText, { color: "red" }]
+                      : { display: "none" }
+                  }
+                >
+                  Username already taken, please try a different one!
+                </Text>
+              </View>
+              {/*Email Input Field*/}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Email</Text>
                 <TextInput
                   style={[
                     styles.input,
-                    { borderColor: emailValid ? "#82B4F9" : "red" },
+                    {
+                      borderColor: inputBorderColor
+                        ? inputBorderColor
+                        : emailValid
+                        ? "#82B4F9"
+                        : "red",
+                    },
                   ]}
                   placeholder="eg. johnsmith@gmail.com"
                   placeholderTextColor="#CDCDCD"
@@ -112,13 +250,29 @@ const Signup = () => {
                   }}
                   value={email}
                 />
+                <Text
+                  style={
+                    isEmailTaken
+                      ? [styles.passGuideText, { color: "red" }]
+                      : { display: "none" }
+                  }
+                >
+                  The email is invalid or already in use.
+                </Text>
               </View>
+              {/*Password Input Field*/}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Password</Text>
                 <TextInput
                   style={[
                     styles.input,
-                    { borderColor: passwordValid ? "#82B4F9" : "red" }, // Update the border color
+                    {
+                      borderColor: inputBorderColor
+                        ? inputBorderColor
+                        : passwordValid
+                        ? "#82B4F9"
+                        : "red",
+                    }, // Update the border color
                   ]}
                   placeholder=""
                   placeholderTextColor="#CDCDCD"
@@ -140,13 +294,19 @@ const Signup = () => {
                   required.
                 </Text>
               </View>
-
+              {/*Confirm Password Input Field*/}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Confirm Password</Text>
                 <TextInput
                   style={[
                     styles.input,
-                    { borderColor: confirmPasswordValid ? "#82B4F9" : "red" },
+                    {
+                      borderColor: inputBorderColor
+                        ? inputBorderColor
+                        : confirmPasswordValid
+                        ? "#82B4F9"
+                        : "red",
+                    },
                   ]}
                   placeholder=""
                   placeholderTextColor="#CDCDCD"
@@ -166,10 +326,12 @@ const Signup = () => {
                 <CheckboxWithText
                   label="I have read and agree to the Terms and Conditions and Privacy Policy."
                   onChange={setCheckbox1Checked}
+                  color={checkboxColor}
                 />
                 <CheckboxWithText
                   label="I would like to signup to the Peaceful Riches    E-Mail Newsletter"
                   onChange={setCheckbox2Checked}
+                  color={checkboxColor}
                 />
               </View>
 
@@ -262,7 +424,7 @@ const styles = StyleSheet.create({
   },
 
   midContainer: {
-    height: 1000,
+    height: 1150,
     backgroundColor: "white",
     width: 320,
     marginVertical: "20%",

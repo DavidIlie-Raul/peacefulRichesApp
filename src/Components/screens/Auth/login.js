@@ -13,6 +13,10 @@ import { AntDesign, Entypo } from "@expo/vector-icons";
 import CustomLoginButton from "../../common/CustomLoginButton";
 import CustomButton from "../../common/CustomButton";
 import ButtonOnlyText from "../../common/ButtonOnlyText";
+import { useAuth } from "../../../Utils/AuthContext";
+import PocketBase from "pocketbase";
+
+const pb = new PocketBase("http://192.168.0.158:90");
 
 const CheckboxWithText = ({ label, onChange }) => {
   const [isChecked, setIsChecked] = useState(false);
@@ -40,23 +44,57 @@ const CheckboxWithText = ({ label, onChange }) => {
 };
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [checkbox1Checked, setCheckbox1Checked] = useState(false);
-  const [checkbox2Checked, setCheckbox2Checked] = useState(false);
-  const [emailValid, setEmailValid] = useState(true);
+  const [authHasNotFailed, setAuthHasNotFailed] = useState(true);
+  const [isUserOrEmailEmpty, setIsUserOrEmailEmpty] = useState(false);
+  const [isPassValid, setIsPassValid] = useState(true);
 
-  const handleLogin = () => {
+  const { setIsLoggedIn } = useAuth();
+
+  const handleLogin = async () => {
+    setIsUserOrEmailEmpty(false);
+    setAuthHasNotFailed(true);
+    setIsPassValid(true);
     // Here you can add your logic for handling the login
-    const isValid = /\S+@\S+\.\S+/.test(email);
-    if (!isValid) {
-      setEmailValid(false);
+    const lowerCaseEmail = emailOrUsername.toLocaleLowerCase().trim();
+    const processedPass = password.trim();
+
+    //check if pass is valid, if not, make the input red, then turn it back after 5 seconds
+    if (password === "" || null) {
+      setIsPassValid(false);
+
+      setTimeout(() => {
+        setIsPassValid(true);
+      }, 5000);
+
+      return;
     }
-    console.log("Email:", email);
-    console.log("Password:", password);
-    console.log("Checkbox 1:", checkbox1Checked);
-    console.log("Checkbox 2:", checkbox2Checked);
-    // You can make API calls or perform authentication checks here
+
+    console.log("Email:", lowerCaseEmail);
+    console.log("Password:", processedPass);
+    try {
+      const authData = await pb
+        .collection("users")
+        .authWithPassword(lowerCaseEmail, processedPass);
+
+      if (pb.authStore.model !== null) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+      // You can make API calls or perform authentication checks here
+    } catch (error) {
+      console.log(error);
+      // Check if the error has a response status code
+      if (error.data && error.data.code === 400) {
+        console.log("Authentication failed with status code 400");
+        setAuthHasNotFailed(false);
+        setTimeout(() => {
+          setAuthHasNotFailed(true);
+        }, 4000);
+      }
+    }
   };
 
   return (
@@ -76,27 +114,35 @@ const Login = () => {
             <Text style={styles.title}>Login</Text>
             <View style={styles.formContainer}>
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email</Text>
+                <Text style={styles.inputLabel}>Email or Username</Text>
                 <TextInput
                   style={[
                     styles.input,
-                    { borderColor: emailValid ? "#82B4F9" : "red" },
+                    {
+                      borderColor:
+                        !isUserOrEmailEmpty && authHasNotFailed
+                          ? "#82B4F9"
+                          : "red",
+                    },
                   ]}
-                  placeholder="eg. johnsmith@gmail.com"
+                  placeholder="eg. john@gmail.com or john21"
                   placeholderTextColor="#CDCDCD"
                   onChangeText={(text) => {
-                    setEmail(text);
-                    // Perform email validation here
-                    const isValid = /\S+@\S+\.\S+/.test(text); // Simple email validation
-                    setEmailValid(isValid);
+                    setEmailOrUsername(text);
                   }}
-                  value={email}
+                  value={emailOrUsername}
                 />
               </View>
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Password</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    {
+                      borderColor:
+                        isPassValid && authHasNotFailed ? "#82B4F9" : "red",
+                    },
+                  ]}
                   placeholder=""
                   placeholderTextColor="#CDCDCD"
                   secureTextEntry
