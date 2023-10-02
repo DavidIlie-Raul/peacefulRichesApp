@@ -1,14 +1,44 @@
 import { Text, Image, View, StyleSheet } from "react-native";
 import ButtonOnlyText from "./ButtonOnlyText";
 import PocketBase from "pocketbase";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../Utils/AuthContext";
-
-const pb = new PocketBase("http://192.168.0.158:90");
+import { TouchableOpacity } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useState, useEffect } from "react";
 
 const ProfileWidget = () => {
-  const { setIsLoggedIn } = useAuth();
+  const { setIsLoggedIn, user, setUser, dbUrl, currentAuthCredentials } =
+    useAuth();
+  const [pfpImgUri, setPfPImgUri] = useState(null);
+  const pb = new PocketBase(dbUrl);
+
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const getProfilePictureFromServer = () => {
+    const userPfp = user.avatar;
+    const userID = user.id;
+
+    if (
+      userPfp &&
+      userPfp !== "" &&
+      userPfp !== null &&
+      userPfp !== undefined
+    ) {
+      const urlBase = `${dbUrl}/api/files`;
+      const urlIdentifier = `/${user.collectionId}/${userID}/${userPfp}`;
+      const pfpURI = `${urlBase}${urlIdentifier}`;
+      setPfPImgUri(pfpURI);
+    }
+  };
+
+  useEffect(() => {
+    getProfilePictureFromServer();
+  }, []);
+
   const handleLogout = () => {
-    //Do Logout Logic Here
+    // Do Logout Logic Here
+    setUser(null);
     pb.authStore.clear;
     if (pb.authStore.model === null) {
       setIsLoggedIn(false);
@@ -16,18 +46,66 @@ const ProfileWidget = () => {
       return console.log("Logout Failed");
     }
     console.log("logged Out");
-    console.log(pb.authStore.model);
+  };
+
+  const addPfp = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [3, 4],
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+
+      //handle file upload and response of that upload
+
+      const formData = new FormData();
+
+      formData.append("avatar", {
+        name: "avatar",
+        uri: result.assets[0].uri,
+        type: "image/jpg",
+      });
+
+      try {
+        const authData = await pb
+          .collection("users")
+          .authWithPassword(
+            currentAuthCredentials.userOrEmail,
+            currentAuthCredentials.pass
+          );
+        console.log(pb.authStore.model.id);
+        const response = await pb
+          .collection(user.collectionName)
+          .update(user.id, formData);
+        console.log(response);
+      } catch (error) {
+        return console.log("updating PFP failed:" + error);
+      }
+
+      setPfPImgUri(result.assets[0].uri);
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.flexContainer}>
-        <Image
-          style={styles.PFPImage}
-          source={require("../../images/PFPTest.jpg")}
-        ></Image>
-        <Text style={styles.userNameText}>David Cultbertson</Text>
-        <Text style={styles.userEmailText}>davidcultbertson@gmail.com</Text>
+        {pfpImgUri ? (
+          <Image style={styles.PFPImage} source={{ uri: pfpImgUri }}></Image>
+        ) : (
+          <TouchableOpacity onPress={() => addPfp()}>
+            <View style={styles.addPfp}>
+              <MaterialCommunityIcons
+                name="file-image-plus-outline"
+                size={24}
+                color="#D954E5"
+              ></MaterialCommunityIcons>
+            </View>
+          </TouchableOpacity>
+        )}
+        <Text style={styles.userNameText}>{user.username}</Text>
+        <Text style={styles.userEmailText}>{user.email}</Text>
         <ButtonOnlyText
           title={"Logout"}
           destination={"Courses"}
@@ -50,12 +128,26 @@ const styles = new StyleSheet.create({
     alignItems: "center",
   },
   PFPImage: {
+    height: 100,
+    width: 100,
     maxHeight: 100,
     maxWidth: 100,
     borderRadius: 160,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#707070",
-    marginVertical: 10,
+    marginVertical: 15,
+  },
+  addPfp: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 100,
+    width: 100,
+    maxHeight: 100,
+    maxWidth: 100,
+    borderRadius: 160,
+    borderWidth: 2,
+    borderColor: "#82B4F9",
+    marginVertical: 15,
   },
   userNameText: {
     color: "#4D4D4D",

@@ -17,7 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 import PocketBase from "pocketbase";
 import { useAuth } from "../../../Utils/AuthContext";
 
-const pb = new PocketBase("http://192.168.0.158:90");
+const pb = new PocketBase("http://192.168.0.158:1450");
 
 const CheckboxWithText = ({ label, onChange, color }) => {
   const [isChecked, setIsChecked] = useState(false);

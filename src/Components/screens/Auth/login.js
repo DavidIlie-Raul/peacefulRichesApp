@@ -16,8 +16,6 @@ import ButtonOnlyText from "../../common/ButtonOnlyText";
 import { useAuth } from "../../../Utils/AuthContext";
 import PocketBase from "pocketbase";
 
-const pb = new PocketBase("http://192.168.0.158:90");
-
 const CheckboxWithText = ({ label, onChange }) => {
   const [isChecked, setIsChecked] = useState(false);
 
@@ -49,8 +47,10 @@ const Login = () => {
   const [authHasNotFailed, setAuthHasNotFailed] = useState(true);
   const [isUserOrEmailEmpty, setIsUserOrEmailEmpty] = useState(false);
   const [isPassValid, setIsPassValid] = useState(true);
+  const { dbUrl } = useAuth();
+  const pb = new PocketBase(dbUrl);
 
-  const { setIsLoggedIn } = useAuth();
+  const { setIsLoggedIn, setUser, setCurrentAuthCredentials } = useAuth();
 
   const handleLogin = async () => {
     setIsUserOrEmailEmpty(false);
@@ -80,11 +80,17 @@ const Login = () => {
 
       if (pb.authStore.model !== null) {
         setIsLoggedIn(true);
+        setUser(pb.authStore.model);
+        setCurrentAuthCredentials({
+          userOrEmail: lowerCaseEmail,
+          pass: processedPass,
+        });
       } else {
         setIsLoggedIn(false);
       }
       // You can make API calls or perform authentication checks here
     } catch (error) {
+      setIsLoggedIn(false);
       console.log(error);
       // Check if the error has a response status code
       if (error.data && error.data.code === 400) {
@@ -93,6 +99,8 @@ const Login = () => {
         setTimeout(() => {
           setAuthHasNotFailed(true);
         }, 4000);
+      } else {
+        console.log("login Failed with error:" + error);
       }
     }
   };

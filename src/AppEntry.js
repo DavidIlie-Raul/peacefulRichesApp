@@ -8,7 +8,7 @@ import { AuthProvider } from "./Utils/AuthContext.js";
 import { useAuth } from "./Utils/AuthContext.js";
 import LoadingScreen from "./Utils/LoadingScreen.js";
 
-const pb = new PocketBase("http://192.168.0.158:90");
+const pb = new PocketBase("http://192.168.0.158:1450");
 
 let customFonts = {
   "Nimbus-Sans-Regular": require("../assets/NimbusSanL-Reg.otf"),
@@ -18,8 +18,14 @@ let customFonts = {
 };
 
 const AppEntry = () => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, setDbUrl, dbUrl } = useAuth();
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [hasDbBeenSet, setHasDbBeenSet] = useState(false);
+
+  async function setDatabaseAddress() {
+    await setDbUrl("http://192.168.0.158:1450");
+    setHasDbBeenSet(true);
+  }
 
   async function loadFontsAsync() {
     await Font.loadAsync(customFonts);
@@ -28,13 +34,13 @@ const AppEntry = () => {
 
   useEffect(() => {
     loadFontsAsync();
+    setDatabaseAddress();
   }, []);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !hasDbBeenSet) {
     return <LoadingScreen />; // Or a loading screen
   }
 
-  console.log(pb.authStore.model);
   return (
     <NavigationContainer>
       {isLoggedIn ? <NavigationBar /> : <AuthNav />}
