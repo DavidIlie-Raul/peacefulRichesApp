@@ -50,7 +50,7 @@ const ProfileWidget = () => {
 
   const addPfp = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [3, 4],
     });
@@ -92,7 +92,9 @@ const ProfileWidget = () => {
     <View style={styles.container}>
       <View style={styles.flexContainer}>
         {pfpImgUri ? (
-          <Image style={styles.PFPImage} source={{ uri: pfpImgUri }}></Image>
+          <TouchableOpacity onPress={() => addPfp()}>
+            <Image style={styles.PFPImage} source={{ uri: pfpImgUri }}></Image>
+          </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={() => addPfp()}>
             <View style={styles.addPfp}>
