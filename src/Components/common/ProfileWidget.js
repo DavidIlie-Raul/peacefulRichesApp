@@ -136,7 +136,7 @@ const styles = new StyleSheet.create({
     maxWidth: 100,
     borderRadius: 160,
     borderWidth: 2,
-    borderColor: "#707070",
+    borderColor: "#82B4F9",
     marginVertical: 15,
   },
   addPfp: {
