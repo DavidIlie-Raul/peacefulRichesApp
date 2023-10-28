@@ -1,4 +1,4 @@
-import React from "react";
+import { React, useEffect } from "react";
 import PocketBase from "pocketbase";
 import { View, StyleSheet, Image, TouchableOpacity, Text } from "react-native";
 
@@ -12,35 +12,37 @@ const UserStatsWidget = ({ statType }) => {
   const [dbCoursesCompleted, setDBCoursesCompleted] = useState(null);
   const pb = new PocketBase(dbUrl);
 
-  const fetchStats = async () => {
-    try {
-      const authData = await pb
-        .collection("users")
-        .authWithPassword(
-          currentAuthCredentials.userOrEmail,
-          currentAuthCredentials.pass
-        );
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const authData = await pb
+          .collection("users")
+          .authWithPassword(
+            currentAuthCredentials.userOrEmail,
+            currentAuthCredentials.pass
+          );
 
-      const dateJoined = pb.authStore.model.created;
-      const DateJoined_year = dateJoined.substring(0, 4);
-      const DateJoined_month = dateJoined.substring(5, 7);
-      const DateJoined_day = dateJoined.substring(8, 10);
+        const dateJoined = pb.authStore.model.created;
+        const DateJoined_year = dateJoined.substring(0, 4);
+        const DateJoined_month = dateJoined.substring(5, 7);
+        const DateJoined_day = dateJoined.substring(8, 10);
 
-      const formattedDateJoined =
-        DateJoined_year + "/" + DateJoined_month + "/" + DateJoined_day;
-      setDateJoined(formattedDateJoined);
+        const formattedDateJoined =
+          DateJoined_year + "/" + DateJoined_month + "/" + DateJoined_day;
+        setDateJoined(formattedDateJoined);
 
-      const coursesCompleted = await pb
-        .collection("user_stats")
-        .getFirstListItem(`usersname = "${pb.authStore.model.id}"`);
-      console.log(coursesCompleted);
-      setDBCoursesCompleted(coursesCompleted.courses_completed);
-    } catch (error) {
-      return console.log("fetching stats has failed" + error);
-    }
-  };
+        const coursesCompleted = await pb
+          .collection("user_stats")
+          .getFirstListItem(`usersname = "${pb.authStore.model.id}"`);
+        console.log(coursesCompleted);
+        setDBCoursesCompleted(coursesCompleted.courses_completed);
+      } catch (error) {
+        return console.log("fetching stats has failed" + error);
+      }
+    };
 
-  fetchStats();
+    fetchStats(); // Call the function inside the useEffect
+  }, []);
 
   if (statType === "dateJoined") {
     return (

@@ -63,6 +63,8 @@ const Signup = () => {
 
   const authContext = useAuth();
 
+  const { setIsLoggedIn, setUser, setCurrentAuthCredentials } = useAuth();
+
   const handleSignup = async () => {
     setIsEmailTaken(false);
     setIsUsernameTaken(false);
@@ -124,9 +126,11 @@ const Signup = () => {
       passwordConfirm: confirmPassword,
       name: `${username}${Math.floor(Math.random() * 100000) + 1}`,
     };
+    const processedPass = password.trim();
     console.log(signupdata.name);
     try {
       const record = await pb.collection("users").create(signupdata);
+      console.log(record);
 
       setInputBorderColor("green");
 
@@ -140,10 +144,24 @@ const Signup = () => {
           .collection("users")
           .authWithPassword(lowerCaseEmail, password);
         console.log(pb.authStore.model, "logged in successfully");
+        const initStatsObject = {
+          usersname: record.id,
+          courses_complete: 0,
+          messages_sent: 0,
+        };
+        const initStatsRecord = await pb
+          .collection("user_stats")
+          .create(initStatsObject);
         if (pb.authStore.model !== null) {
+          setIsLoggedIn(true);
+          setUser(pb.authStore.model);
+          setCurrentAuthCredentials({
+            userOrEmail: lowerCaseEmail,
+            pass: processedPass,
+          });
           authContext.setIsLoggedIn(true); // Set isLoggedIn to true
         } else {
-          authContext.setIsLoggedIn(false); // Set isLoggedIn to true
+          authContext.setIsLoggedIn(false); // Set isLoggedIn to false
         }
       } catch (error) {
         console.log(
