@@ -7,6 +7,7 @@ import PocketBase from "pocketbase";
 import { AuthProvider } from "./Utils/AuthContext.js";
 import { useAuth } from "./Utils/AuthContext.js";
 import LoadingScreen from "./Utils/LoadingScreen.js";
+import eventsource from "react-native-sse";
 
 const pb = new PocketBase("http://192.168.0.158:1450");
 
@@ -32,9 +33,14 @@ const AppEntry = () => {
     setFontsLoaded(true);
   }
 
+  function defineEventSourceGlobally() {
+    global.EventSource = eventsource;
+  }
+
   useEffect(() => {
     loadFontsAsync();
     setDatabaseAddress();
+    defineEventSourceGlobally();
   }, []);
 
   if (!fontsLoaded || !hasDbBeenSet) {

@@ -8,7 +8,7 @@ const ChatPage = () => {
   const { dbUrl, currentAuthCredentials } = useAuth();
   const pb = new PocketBase(dbUrl);
   const [messages, setMessages] = useState([]);
-  let idOfCurrentUser;
+  const [idOfCurrentAuthedUser, setIdOfCurrentAuthedUser] = useState(null);
 
   async function fetchMessageHistory() {
     try {
@@ -18,12 +18,10 @@ const ChatPage = () => {
           currentAuthCredentials.userOrEmail,
           currentAuthCredentials.pass
         );
-      const resultList = await pb.collection("messages").getList(1, 50, {
-        sort: "created",
-        expand: "sender",
-      });
+      const resultList = await pb
+        .collection("messages")
+        .getList(1, 50, { sort: "-created" });
       console.log(resultList);
-      idOfCurrentUser = authData.record.id;
 
       // Transform the data into a format suitable for Gifted Chat
       const formattedMessages = resultList.items.map((item) => {
@@ -40,36 +38,49 @@ const ChatPage = () => {
 
       console.log(formattedMessages);
       // Set the initialMessages state with the formatted data
+      setIdOfCurrentAuthedUser(authData.record.id);
       setMessages(formattedMessages);
     } catch (error) {
       console.log(error);
     }
   }
-
+  async function subscribeToDbChanges() {
+    await pb.collection("messages").subscribe("*", (data) => {
+      console.log(data);
+    });
+  }
   // Load initial messages from your backend (PocketBase)
   useEffect(() => {
     fetchMessageHistory();
+    subscribeToDbChanges();
   }, []);
 
   // Function to send a new message
-  const handleSend = (newMessages = []) => {
+  const handleSend = (newMessage) => {
+    messageToSendToDB = {
+      content: newMessage,
+      sender: idOfCurrentAuthedUser,
+    };
     // Update backend with the new message
+    pb.collection("messages").create();
     // Update UI with the new message
     setMessages((prevMessages) => GiftedChat.append(prevMessages, newMessages));
   };
-
   return (
     <View style={styles.container}>
       <GiftedChat
         messages={messages}
-        onSend={(newMessages) => handleSend(newMessages)}
-        user={{ _id: 1 }}
+        onSend={(newMessage) => handleSend(newMessage)}
+        user={{
+          _id: idOfCurrentAuthedUser, // Use the ID of the current user
+          name: "David", // Set the name of the current user
+        }}
         renderBubble={(props) => {
           return (
             <Bubble
               {...props}
               wrapperStyle={{
-                left: {
+                right: {
                   backgroundColor: "lightblue", // Set the left bubble background color
                 },
               }}
