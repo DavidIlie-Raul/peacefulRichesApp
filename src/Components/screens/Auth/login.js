@@ -61,7 +61,18 @@ const Login = () => {
     const processedPass = password.trim();
 
     //check if pass is valid, if not, make the input red, then turn it back after 5 seconds
-    if (password === "" || null) {
+    if (lowerCaseEmail === "" || lowerCaseEmail === null) {
+      setIsUserOrEmailEmpty(true);
+
+      setTimeout(() => {
+        setIsUserOrEmailEmpty(false);
+      }, 5000);
+
+      return;
+    }
+
+    //check if pass is valid, if not, make the input red, then turn it back after 5 seconds
+    if (password === "" || password === null) {
       setIsPassValid(false);
 
       setTimeout(() => {
