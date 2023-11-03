@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [dbUrl, setDbUrl] = useState(null);
   const [currentAuthCredentials, setCurrentAuthCredentials] = useState(null);
-
+  const [chatMessages, setChatMessages] = useState(null);
   return (
     <AuthContext.Provider
       value={{
@@ -24,6 +24,8 @@ export function AuthProvider({ children }) {
         setDbUrl,
         currentAuthCredentials,
         setCurrentAuthCredentials,
+        chatMessages,
+        setChatMessages,
       }}
     >
       {children}

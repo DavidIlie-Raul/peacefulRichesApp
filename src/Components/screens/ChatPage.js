@@ -5,74 +5,86 @@ import PocketBase from "pocketbase";
 import { useAuth } from "../../Utils/AuthContext";
 
 const ChatPage = () => {
-  const { dbUrl, currentAuthCredentials } = useAuth();
+  const { dbUrl, currentAuthCredentials, chatMessages, setChatMessages, user } =
+    useAuth();
   const pb = new PocketBase(dbUrl);
-  const [messages, setMessages] = useState([]);
-  const [idOfCurrentAuthedUser, setIdOfCurrentAuthedUser] = useState(null);
 
-  async function fetchMessageHistory() {
+  async function initialiseChat() {
     try {
-      const authData = await pb
-        .collection("users")
-        .authWithPassword(
-          currentAuthCredentials.userOrEmail,
-          currentAuthCredentials.pass
-        );
-      const resultList = await pb
+      const records = await pb
         .collection("messages")
-        .getList(1, 50, { sort: "-created" });
-      console.log(resultList);
+        .getList(1, 50, { sort: "created" });
 
-      // Transform the data into a format suitable for Gifted Chat
-      const formattedMessages = resultList.items.map((item) => {
-        return {
-          _id: item.id, // Use a unique identifier for each message
-          text: item.content, // The message content
-          createdAt: new Date(item.created), // Convert created timestamp to a Date object
+      const formattedMessagesArray = [];
+
+      for (const item of records.items) {
+        const userThatSentMessage = await pb
+          .collection("users")
+          .getOne(item.sender);
+        let isAvatarEmpty = true;
+
+        if (
+          userThatSentMessage.avatar !== "" &&
+          userThatSentMessage.avatar !== undefined
+        ) {
+          isAvatarEmpty = false;
+        }
+
+        const formattedMessageObject = {
+          _id: item.id,
+          text: item.content,
+          createdAt: new Date(item.created),
           user: {
-            _id: item.sender, // Use the sender's ID as the sender's ID
-            name: "David", // You might need to retrieve the sender's name from your data
+            _id: item.sender,
+            name: userThatSentMessage.username,
+            avatar: isAvatarEmpty
+              ? undefined
+              : `${dbUrl}/api/files/${userThatSentMessage.collectionId}/${userThatSentMessage.id}/${userThatSentMessage.avatar}`,
           },
         };
-      });
 
-      console.log(formattedMessages);
-      // Set the initialMessages state with the formatted data
-      setIdOfCurrentAuthedUser(authData.record.id);
-      setMessages(formattedMessages);
+        formattedMessagesArray.push(formattedMessageObject);
+      }
+
+      // Sort the messages by createdAt in descending order
+      formattedMessagesArray.sort((a, b) => b.createdAt - a.createdAt);
+
+      setChatMessages(formattedMessagesArray);
     } catch (error) {
-      console.log(error);
+      console.log("initialising chat has failed: ", error, error.data);
     }
   }
-  async function subscribeToDbChanges() {
-    await pb.collection("messages").subscribe("*", (data) => {
-      console.log(data);
-    });
-  }
-  // Load initial messages from your backend (PocketBase)
-  useEffect(() => {
-    fetchMessageHistory();
-    subscribeToDbChanges();
-  }, []);
 
+  useEffect(() => {
+    initialiseChat();
+    console.log("Component mounted");
+  }, []);
+  console.log(chatMessages);
   // Function to send a new message
-  const handleSend = (newMessage) => {
-    messageToSendToDB = {
-      content: newMessage,
-      sender: idOfCurrentAuthedUser,
+  const handleSend = async (newMessage) => {
+    const messageToSendToDB = {
+      content: newMessage[0].text,
+      sender: user.id,
     };
-    // Update backend with the new message
-    pb.collection("messages").create();
+    console.log(messageToSendToDB);
     // Update UI with the new message
-    setMessages((prevMessages) => GiftedChat.append(prevMessages, newMessages));
+    setChatMessages((chatMessages) =>
+      GiftedChat.append(chatMessages, newMessage)
+    );
+    try {
+      // Update backend with the new message
+      await pb.collection("messages").create(messageToSendToDB);
+    } catch (error) {
+      console.log("could not create new message", error, error.data);
+    }
   };
   return (
     <View style={styles.container}>
       <GiftedChat
-        messages={messages}
+        messages={chatMessages}
         onSend={(newMessage) => handleSend(newMessage)}
         user={{
-          _id: idOfCurrentAuthedUser, // Use the ID of the current user
+          _id: user.id, // Use the ID of the current user
           name: "David", // Set the name of the current user
         }}
         renderBubble={(props) => {
