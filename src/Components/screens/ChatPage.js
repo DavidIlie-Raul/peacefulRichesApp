@@ -1,42 +1,48 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Text, Platform } from "react-native";
-import { GiftedChat, Bubble, BubbleProps } from "react-native-gifted-chat";
+import { GiftedChat, Bubble, BubbleProps, InputToolbar } from "react-native-gifted-chat";
 import PocketBase from "pocketbase";
 import { useAuth } from "../../Utils/AuthContext";
-import SlackMessage from "../../Utils/chat/SlackMessage";
-import emojiUtils from "emoji-utils";
+import { AntDesign } from '@expo/vector-icons';
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 const ChatPage = () => {
   const { dbUrl, currentAuthCredentials, user } = useAuth();
   const pb = new PocketBase(dbUrl);
   const [messages, setMessages] = useState([]);
 
-  function renderMessage(props) {
-    const {
-      currentMessage: { text: currText },
-    } = props;
+  const CustomAction = () => {
 
-    let messageTextStyle;
+    //Handle Attaching Files
+    async function handleFileUpload() {
 
-    // Make "pure emoji" messages much bigger than plain text.
-    if (currText && emojiUtils.isPureEmojiString(currText)) {
-      messageTextStyle = {
-        fontSize: 28,
-        // Emoji get clipped if lineHeight isn't increased; make it consistent across platforms.
-        lineHeight: Platform.OS === "android" ? 34 : 30,
-      };
-    }
+      console.log('Add attachment pressed, handling file upload');
 
-    return <SlackMessage {...props} messageTextStyle={messageTextStyle} />;
-  }
+    };
 
-  function customUsernameContainer() {
     return (
+      <TouchableOpacity onPress={handleFileUpload}>
       <View>
-        <Text>{this.user.name}</Text>
+        <AntDesign name="pluscircle" size={24} color="lightgray" style={styles.addFileButton} />
       </View>
+      </TouchableOpacity>
     );
-  }
+    
+  };
+
+  const customtInputToolbar = props => {
+    return (
+      <InputToolbar
+        {...props}
+        containerStyle={{
+          backgroundColor: "white",
+          borderTopColor: "#E8E8E8",
+          borderTopWidth: 0,
+          padding: 0
+        }}
+      />
+    );
+  };
 
   useEffect(() => {
     async function fetchMessageHistory() {
@@ -177,12 +183,6 @@ const ChatPage = () => {
   const handleSend = async (newMessage) => {
     // Handle sending new messages here
 
-    /*This line of code causes double messages to appear on send
-    , since the realtime client is also listening to new messages
-    */
-    /*setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, newMessage)
-    );*/
 
     const messageToSendToDB = {
       content: newMessage[0].text,
@@ -208,6 +208,10 @@ const ChatPage = () => {
           _id: user.id, // Use the ID of the current user
           name: user.username, // Set the name of the current user
         }}
+        renderInputToolbar={props => customtInputToolbar(props)}
+        renderActions={(props) => {
+          return <CustomAction />;
+        }}
         renderBubble={(props) => {
           return (
             <Bubble
@@ -230,6 +234,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  addFileButton:{
+  marginBottom:10,
+  paddingLeft:10,
+  }
 });
 
 export default ChatPage;
