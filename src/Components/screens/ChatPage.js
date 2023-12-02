@@ -1,36 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Text, Platform } from "react-native";
-import { GiftedChat, Bubble, BubbleProps, InputToolbar } from "react-native-gifted-chat";
+import {
+  GiftedChat,
+  Bubble,
+  BubbleProps,
+  InputToolbar,
+} from "react-native-gifted-chat";
 import PocketBase from "pocketbase";
 import { useAuth } from "../../Utils/AuthContext";
-import { AntDesign } from '@expo/vector-icons';
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { AntDesign } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { SheetManager } from "react-native-actions-sheet";
 
 const ChatPage = () => {
   const { dbUrl, currentAuthCredentials, user } = useAuth();
   const pb = new PocketBase(dbUrl);
   const [messages, setMessages] = useState([]);
 
-  const CustomAction = () => {
-
-    //Handle Attaching Files
-    async function handleFileUpload() {
-
-      console.log('Add attachment pressed, handling file upload');
-
-    };
-
-    return (
-      <TouchableOpacity onPress={handleFileUpload}>
-      <View>
-        <AntDesign name="pluscircle" size={24} color="lightgray" style={styles.addFileButton} />
-      </View>
-      </TouchableOpacity>
-    );
-    
+  //Handle Attaching Files
+  const handleAddAttachment = async () => {
+    //Show ActionSheet and present options of what to upload
+    let resultChoice = await SheetManager.show("attachments-upload-sheet");
+    console.log("choice:", resultChoice);
   };
 
-  const customtInputToolbar = props => {
+  const CustomAction = () => {
+    return (
+      <View>
+        <AntDesign
+          name="pluscircle"
+          size={24}
+          color="cyan"
+          style={styles.addFileButton}
+          onPress={handleAddAttachment}
+        />
+      </View>
+    );
+  };
+
+  const customtInputToolbar = (props) => {
     return (
       <InputToolbar
         {...props}
@@ -38,7 +46,7 @@ const ChatPage = () => {
           backgroundColor: "white",
           borderTopColor: "#E8E8E8",
           borderTopWidth: 0,
-          padding: 0
+          padding: 0,
         }}
       />
     );
@@ -183,7 +191,6 @@ const ChatPage = () => {
   const handleSend = async (newMessage) => {
     // Handle sending new messages here
 
-
     const messageToSendToDB = {
       content: newMessage[0].text,
       sender: user.id,
@@ -208,7 +215,7 @@ const ChatPage = () => {
           _id: user.id, // Use the ID of the current user
           name: user.username, // Set the name of the current user
         }}
-        renderInputToolbar={props => customtInputToolbar(props)}
+        renderInputToolbar={(props) => customtInputToolbar(props)}
         renderActions={(props) => {
           return <CustomAction />;
         }}
@@ -234,10 +241,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  addFileButton:{
-  marginBottom:10,
-  paddingLeft:10,
-  }
+  addFileButton: {
+    marginBottom: 10,
+    paddingLeft: 10,
+  },
+  button: {
+    marginVertical: 5,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+    maxWidth: "100%",
+  },
+  buttonText: {
+    color: "#D954E5",
+    fontFamily: "Nimbus-Sans-Bold",
+    textAlign: "left",
+    verticalAlign: "middle",
+    width: "100%",
+  },
 });
 
 export default ChatPage;
