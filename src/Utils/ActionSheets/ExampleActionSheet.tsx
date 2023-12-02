@@ -31,7 +31,7 @@ function ExampleSheet(props: SheetProps<{ value: string }>) {
               color="black"
               style={styles.optionIcon}
             />
-            <Text style={styles.optionText}>Attach Image(s)</Text>
+            <Text style={styles.optionText}>Image</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -48,7 +48,7 @@ function ExampleSheet(props: SheetProps<{ value: string }>) {
               color="black"
               style={styles.optionIcon}
             />
-            <Text style={styles.optionText}>Attach File(s)</Text>
+            <Text style={styles.optionText}>File</Text>
           </View>
         </TouchableOpacity>
       </View>

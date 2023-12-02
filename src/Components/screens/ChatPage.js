@@ -10,6 +10,7 @@ import PocketBase from "pocketbase";
 import { useAuth } from "../../Utils/AuthContext";
 import { AntDesign } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { SheetManager } from "react-native-actions-sheet";
 
 const ChatPage = () => {
@@ -22,6 +23,26 @@ const ChatPage = () => {
     //Show ActionSheet and present options of what to upload
     let resultChoice = await SheetManager.show("attachments-upload-sheet");
     console.log("choice:", resultChoice);
+    if (resultChoice === "image") {
+      //Start Image pick process
+      console.log("picking image");
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [3, 4],
+      });
+      console.log("Picked:", result);
+    } else if (resultChoice === "file") {
+      //Start File pick Process
+      console.log("picking file");
+      let result = DocumentPicker.getDocumentAsync({
+        copyToCacheDirectory: true,
+      });
+      console.log(result);
+    } else {
+      console.error("An error occurred in adding an attachment");
+      return;
+    }
   };
 
   const CustomAction = () => {
