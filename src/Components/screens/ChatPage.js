@@ -12,36 +12,63 @@ import { AntDesign } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { SheetManager } from "react-native-actions-sheet";
+import "react-native-get-random-values";
+import { v4 as uuidv4 } from "uuid";
 
 const ChatPage = () => {
   const { dbUrl, currentAuthCredentials, user } = useAuth();
   const pb = new PocketBase(dbUrl);
   const [messages, setMessages] = useState([]);
+  let messageToSendToDB = new FormData();
 
   //Handle Attaching Files
   const handleAddAttachment = async () => {
+    let result;
     //Show ActionSheet and present options of what to upload
     let resultChoice = await SheetManager.show("attachments-upload-sheet");
     console.log("choice:", resultChoice);
-    if (resultChoice === "image") {
-      //Start Image pick process
-      console.log("picking image");
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-      });
-      console.log("Picked:", result);
-    } else if (resultChoice === "file") {
-      //Start File pick Process
-      console.log("picking file");
-      let result = DocumentPicker.getDocumentAsync({
-        copyToCacheDirectory: true,
-      });
-      console.log(result);
-    } else {
-      console.error("An error occurred in adding an attachment");
-      return;
+
+    switch (resultChoice) {
+      case "image":
+        //Start Image pick process
+        console.log("picking image");
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [3, 4],
+        });
+        if (!result.canceled) {
+          messageToSendToDB.append("attachments", {
+            name: `attachments`,
+            uri: result.assets[0].uri,
+            type: "image/jpg",
+          });
+        }
+
+        break;
+      case "file":
+        //Start File pick Process
+        console.log("picking file");
+        result = await DocumentPicker.getDocumentAsync({
+          copyToCacheDirectory: true,
+        });
+        if (result.type === "success") {
+          messageToSendToDB.append("attachments", {
+            name: `attachments`,
+            uri: result.uri,
+            type: result.mimeType,
+          });
+          console.log(result);
+        } else {
+          return console.log("Failed to upload selected file");
+        }
+
+        break;
+      case "undefined":
+        return;
+      default:
+        console.log("ActionSheet Opened");
+        break;
     }
   };
 
@@ -71,6 +98,10 @@ const ChatPage = () => {
         }}
       />
     );
+  };
+
+  const customtMessageBubble = (props) => {
+    return <Bubble {...props} />;
   };
 
   useEffect(() => {
@@ -210,12 +241,10 @@ const ChatPage = () => {
   }, []);
   // Function to send a new message
   const handleSend = async (newMessage) => {
-    // Handle sending new messages here
+    // Handle sending new messages here, append content and sender values to formData, besides attachments, if any.
+    messageToSendToDB.append("content", newMessage[0].text);
+    messageToSendToDB.append("sender", user.id);
 
-    const messageToSendToDB = {
-      content: newMessage[0].text,
-      sender: user.id,
-    };
     console.log(messageToSendToDB);
 
     try {
@@ -229,6 +258,8 @@ const ChatPage = () => {
     <View style={styles.container}>
       <GiftedChat
         messages={messages}
+        /*renderMessage={customtMessageBubble} Work in progress for the new style of the message bubbles, 
+        gotta make documents show up and render, not just images*/
         renderUsernameOnMessage={true}
         showAvatarForEveryMessage={true}
         onSend={(newMessage) => handleSend(newMessage)}
