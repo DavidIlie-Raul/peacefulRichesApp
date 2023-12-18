@@ -6,10 +6,17 @@ import { useAuth } from "../../Utils/AuthContext";
 import { TouchableOpacity } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ProfileWidget = () => {
-  const { setIsLoggedIn, user, setUser, dbUrl, currentAuthCredentials } =
-    useAuth();
+  const {
+    setIsLoggedIn,
+    user,
+    setUser,
+    dbUrl,
+    currentAuthCredentials,
+    authJWT,
+  } = useAuth();
   const [pfpImgUri, setPfPImgUri] = useState(null);
   const pb = new PocketBase(dbUrl);
 
@@ -40,6 +47,7 @@ const ProfileWidget = () => {
     // Do Logout Logic Here
     setUser(null);
     pb.authStore.clear;
+    AsyncStorage.removeItem("authJWT");
     if (pb.authStore.model === null) {
       setIsLoggedIn(false);
     } else {
@@ -69,12 +77,9 @@ const ProfileWidget = () => {
       });
 
       try {
-        const authData = await pb
-          .collection("users")
-          .authWithPassword(
-            currentAuthCredentials.userOrEmail,
-            currentAuthCredentials.pass
-          );
+        pb.authStore.save(authJWT, null);
+        await pb.collection("users").authRefresh();
+        console.log(pb.authStore);
         console.log(pb.authStore.model.id);
         const response = await pb
           .collection(user.collectionName)

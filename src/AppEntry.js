@@ -8,6 +8,7 @@ import { AuthProvider } from "./Utils/AuthContext.js";
 import { useAuth } from "./Utils/AuthContext.js";
 import LoadingScreen from "./Utils/LoadingScreen.js";
 import eventsource from "react-native-sse";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const pb = new PocketBase("http://192.168.0.158:1450");
 
@@ -19,9 +20,11 @@ let customFonts = {
 };
 
 const AppEntry = () => {
-  const { isLoggedIn, setDbUrl, dbUrl } = useAuth();
+  const { isLoggedIn, setDbUrl, dbUrl, setUser, setIsLoggedIn, setAuthJWT } =
+    useAuth();
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [hasDbBeenSet, setHasDbBeenSet] = useState(false);
+  const [hasTokenLoginFinished, setHasTokenLoginFinished] = useState(false);
 
   async function setDatabaseAddress() {
     await setDbUrl("http://192.168.0.158:1450");
@@ -33,6 +36,32 @@ const AppEntry = () => {
     setFontsLoaded(true);
   }
 
+  async function tryLoginFromAsyncStorage() {
+    const authJWT = await AsyncStorage.getItem("authJWT");
+
+    if (!authJWT) {
+      console.log(authJWT);
+      return;
+    } else if (authJWT) {
+      console.log(authJWT);
+      try {
+        console.log(pb.authStore);
+        pb.authStore.save(authJWT, null);
+        await pb.collection("users").authRefresh();
+        if (pb.authStore.model !== null && pb.authStore.model !== undefined) {
+          setUser(pb.authStore.model);
+          setIsLoggedIn(true);
+          setAuthJWT(authJWT);
+        } else {
+          return;
+        }
+      } catch (error) {
+        console.log("An error occured while logging in using past JWT", error);
+        return;
+      }
+    }
+  }
+
   function defineEventSourceGlobally() {
     global.EventSource = eventsource;
   }
@@ -41,6 +70,7 @@ const AppEntry = () => {
     loadFontsAsync();
     setDatabaseAddress();
     defineEventSourceGlobally();
+    tryLoginFromAsyncStorage();
   }, []);
 
   if (!fontsLoaded || !hasDbBeenSet) {

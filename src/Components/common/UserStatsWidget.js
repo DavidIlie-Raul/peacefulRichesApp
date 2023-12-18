@@ -7,7 +7,7 @@ import { useAuth } from "../../Utils/AuthContext";
 import { useState } from "react";
 
 const UserStatsWidget = ({ statType }) => {
-  const { dbUrl, currentAuthCredentials } = useAuth();
+  const { dbUrl, currentAuthCredentials, authJWT } = useAuth();
   const [dateJoined, setDateJoined] = useState(null);
   const [dbCoursesCompleted, setDBCoursesCompleted] = useState(null);
   const pb = new PocketBase(dbUrl);
@@ -15,12 +15,10 @@ const UserStatsWidget = ({ statType }) => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const authData = await pb
-          .collection("users")
-          .authWithPassword(
-            currentAuthCredentials.userOrEmail,
-            currentAuthCredentials.pass
-          );
+        console.log(pb.authStore.token);
+        pb.authStore.save(authJWT, null);
+        await pb.collection("users").authRefresh();
+        console.log(pb.authStore);
 
         const dateJoined = pb.authStore.model.created;
         const DateJoined_year = dateJoined.substring(0, 4);

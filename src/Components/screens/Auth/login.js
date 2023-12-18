@@ -14,6 +14,7 @@ import CustomLoginButton from "../../common/CustomLoginButton";
 import CustomButton from "../../common/CustomButton";
 import ButtonOnlyText from "../../common/ButtonOnlyText";
 import { useAuth } from "../../../Utils/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import PocketBase from "pocketbase";
 
 const CheckboxWithText = ({ label, onChange }) => {
@@ -91,6 +92,8 @@ const Login = () => {
 
       if (pb.authStore.model !== null) {
         setIsLoggedIn(true);
+        console.log(pb.authStore);
+        await AsyncStorage.setItem("authJWT", pb.authStore.token);
         setUser(pb.authStore.model);
         setCurrentAuthCredentials({
           userOrEmail: lowerCaseEmail,
