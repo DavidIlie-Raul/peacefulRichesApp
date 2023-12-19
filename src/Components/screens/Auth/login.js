@@ -94,6 +94,7 @@ const Login = () => {
         setIsLoggedIn(true);
         console.log(pb.authStore);
         await AsyncStorage.setItem("authJWT", pb.authStore.token);
+        setAuthJWT(pb.authStore.token);
         setUser(pb.authStore.model);
         setCurrentAuthCredentials({
           userOrEmail: lowerCaseEmail,
