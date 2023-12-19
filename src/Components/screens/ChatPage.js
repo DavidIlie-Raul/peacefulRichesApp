@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Text, Platform } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Text,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
 import {
   GiftedChat,
   Bubble,
   BubbleProps,
   InputToolbar,
+  Message,
 } from "react-native-gifted-chat";
 import PocketBase from "pocketbase";
 import { useAuth } from "../../Utils/AuthContext";
@@ -12,11 +19,12 @@ import { AntDesign } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { SheetManager } from "react-native-actions-sheet";
-import "react-native-get-random-values";
-import { v4 as uuidv4 } from "uuid";
+import TruncateText from "../../Utils/TruncateText";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system";
 
 const ChatPage = () => {
-  const { dbUrl, currentAuthCredentials, user } = useAuth();
+  const { dbUrl, currentAuthCredentials, user, setAuthJWT } = useAuth();
   const pb = new PocketBase(dbUrl);
   const [messages, setMessages] = useState([]);
   let messageToSendToDB = new FormData();
@@ -38,10 +46,10 @@ const ChatPage = () => {
           aspect: [3, 4],
         });
         if (!result.canceled) {
-          messageToSendToDB.append("attachments", {
-            name: `attachments`,
+          messageToSendToDB.append("images", {
+            name: `images`,
             uri: result.assets[0].uri,
-            type: "image/jpg",
+            type: result.mimeType,
           });
         }
 
@@ -53,8 +61,8 @@ const ChatPage = () => {
           copyToCacheDirectory: true,
         });
         if (result.type === "success") {
-          messageToSendToDB.append("attachments", {
-            name: `attachments`,
+          messageToSendToDB.append("documents", {
+            name: `documents`,
             uri: result.uri,
             type: result.mimeType,
           });
@@ -100,9 +108,239 @@ const ChatPage = () => {
     );
   };
 
-  const customtMessageBubble = (props) => {
-    return <Bubble {...props} />;
-  };
+  async function handleAttachmentPress(document) {
+    const save = async (uri, filename, mimetype) => {
+      if (Platform.OS === "android") {
+        const permissions =
+          await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+        if (permissions.granted) {
+          const base64 = await FileSystem.readAsStringAsync(uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          await FileSystem.StorageAccessFramework.createFileAsync(
+            permissions.directoryUri,
+            filename,
+            mimetype
+          )
+            .then(async (uri) => {
+              await FileSystem.writeAsStringAsync(uri, base64, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
+            })
+            .catch((e) => console.log(e));
+        } else {
+          return;
+        }
+      } else {
+        shareAsync(uri);
+      }
+    };
+    // Handle opening the document, for example, you can open a modal or use Linking to open the document
+    const uri = FileSystem.documentDirectory + "downloads/";
+    const url = `${dbUrl}/api/files/yrqnthkt7psdnbi/${document.itemId}/${document.name}`;
+    console.log("downloadURL:", url);
+    try {
+      const downloadResult = await FileSystem.downloadAsync(url, uri);
+      if (downloadResult.status === 200) {
+        console.log(downloadResult);
+        console.log("File downloaded to:", uri);
+        console.log(downloadResult.uri, document.name, downloadResult.mimeType);
+        save(
+          downloadResult.uri,
+          document.name,
+          downloadResult.headers["Content-Type"]
+        );
+      } else {
+        console.error(
+          "Failed to download file. Server returned status:",
+          downloadResult.status
+        );
+      }
+    } catch (error) {
+      console.log("An error occurred with downloading this attachment", error);
+    }
+
+    // For simplicity, this example uses Linking to open the document
+    console.log("Opening", document);
+    return;
+  }
+
+  function renderMessage(props) {
+    const { currentMessage } = props;
+
+    console.log(currentMessage.documents);
+
+    // Check if the message has attachments
+    if (
+      currentMessage.documents !== undefined &&
+      currentMessage.documents.length > 0
+    ) {
+      try {
+        // Assuming each attachment has a 'name' and 'itemId' property
+        const documents = currentMessage.documents;
+
+        const CustomBubble = (props) => {
+          const { currentMessage, position } = props;
+
+          let isLeft;
+          if (position === "left") {
+            isLeft = true;
+          } else {
+            isLeft = false;
+          }
+          console.log(isLeft);
+
+          console.log("Current position", position);
+          if (
+            currentMessage.documents !== undefined &&
+            currentMessage.documents.length > 0
+          ) {
+            return (
+              <View
+                style={
+                  isLeft
+                    ? bubbleStyles.left.bubbleOuterContainer
+                    : bubbleStyles.right.bubbleOuterContainer
+                }
+              >
+                <View
+                  style={
+                    isLeft
+                      ? bubbleStyles.left.bubbleContainer
+                      : bubbleStyles.right.bubbleContainer
+                  }
+                >
+                  {/* Document Wrapper */}
+                  <View
+                    style={
+                      isLeft
+                        ? bubbleStyles.left.documentAttachmentsContainer
+                        : bubbleStyles.right.documentAttachmentsContainer
+                    }
+                  >
+                    {documents.map((document, index) => (
+                      <View
+                        key={index}
+                        style={
+                          isLeft
+                            ? bubbleStyles.left.documentAttachment
+                            : bubbleStyles.right.documentAttachment
+                        }
+                      >
+                        <View
+                          style={
+                            isLeft
+                              ? bubbleStyles.left.innerDocumentFileIconAndText
+                              : bubbleStyles.right.innerDocumentFileIconAndText
+                          }
+                        >
+                          <AntDesign
+                            style={
+                              isLeft
+                                ? bubbleStyles.left.documentAttachmentIcon
+                                : bubbleStyles.right.documentAttachmentIcon
+                            }
+                            name="file1"
+                            size={15}
+                            color="black"
+                          />
+                          <Text
+                            style={
+                              isLeft
+                                ? bubbleStyles.left.documentAttachmentText
+                                : bubbleStyles.right.documentAttachmentText
+                            }
+                            numberOfLines={2}
+                            ellipsizeMode="tail"
+                          >
+                            {TruncateText(document.name, 30)}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => handleAttachmentPress(document)}
+                        >
+                          <MaterialCommunityIcons
+                            style={
+                              isLeft
+                                ? bubbleStyles.left.documentDownloadIcon
+                                : bubbleStyles.right.documentDownloadIcon
+                            }
+                            name="download-circle"
+                            size={20}
+                            color="black"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                  {/* Message Wrapper */}
+                  <View
+                    style={
+                      isLeft
+                        ? bubbleStyles.left.bubbleMessageWrapper
+                        : bubbleStyles.right.bubbleMessageWrapper
+                    }
+                  >
+                    <Text
+                      style={
+                        isLeft
+                          ? bubbleStyles.left.bubbleMessage
+                          : bubbleStyles.right.bubbleMessage
+                      }
+                    >
+                      {currentMessage.text}
+                    </Text>
+                  </View>
+                  {/* Footer Wrapper */}
+                  <View
+                    style={
+                      isLeft
+                        ? bubbleStyles.left.bubbleFooterWrapper
+                        : bubbleStyles.right.bubbleFooterWrapper
+                    }
+                  >
+                    <Text
+                      style={
+                        isLeft
+                          ? bubbleStyles.left.bubbleFooterUsername
+                          : bubbleStyles.right.bubbleFooterUsername
+                      }
+                    >
+                      ~ {currentMessage.user.name} {"  "}
+                    </Text>
+                    <Text
+                      style={
+                        isLeft
+                          ? bubbleStyles.left.bubbleFooterText
+                          : bubbleStyles.right.bubbleFooterText
+                      }
+                    >
+                      {"  "}
+                      {currentMessage.createdAt.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            );
+          }
+
+          return <Bubble {...props}></Bubble>;
+        };
+        // Render each attachment
+        return <Message {...props} renderBubble={CustomBubble}></Message>;
+      } catch (error) {
+        console.error("Error in mapping document", error);
+        return;
+      }
+    }
+
+    console.log("No attachment");
+    // Render regular text messages
+    return <Message {...props} />;
+  }
 
   useEffect(() => {
     async function fetchMessageHistory() {
@@ -134,14 +372,38 @@ const ChatPage = () => {
             return avatarToReturn;
           }
           function getMessageImage() {
-            const imageAttachment = item.attachments[0];
-            const imageURL = `${dbUrl}/api/files/${item.collectionId}/${item.id}/${item.attachments[0]}`;
+            const imageAttachment = item.images[0];
+            console.log("ImageAttachment objects:", imageAttachment);
+            const imageURL = `${dbUrl}/api/files/${item.collectionId}/${item.id}/${item.images[0]}`;
             if (
               imageAttachment !== "" &&
               imageAttachment !== null &&
               imageAttachment !== undefined
             ) {
               return imageURL;
+            } else {
+              return undefined;
+            }
+          }
+          function getMessageDocuments() {
+            const documentsArray = item.documents;
+            console.log("Docs Array for this message:", documentsArray);
+
+            if (
+              documentsArray !== "" &&
+              documentsArray !== null &&
+              documentsArray !== undefined
+            ) {
+              // Map each document name to an object with name and item ID
+              const documentsWithIds = documentsArray.map((documentName) => {
+                return {
+                  name: documentName,
+                  itemId: item.id,
+                  // You may want to add other properties as needed
+                };
+              });
+
+              return documentsWithIds;
             } else {
               return undefined;
             }
@@ -156,6 +418,7 @@ const ChatPage = () => {
               avatar: getAvatarImage(),
             },
             image: getMessageImage(),
+            documents: getMessageDocuments(),
           };
           formattedMessages.push(formattedChatMessage);
         }
@@ -196,8 +459,8 @@ const ChatPage = () => {
               return avatarToReturn;
             }
             function getNewMessageImage() {
-              const imageAttachment = data.record.attachments[0];
-              const imageURL = `${dbUrl}/api/files/${data.record.collectionId}/${data.record.id}/${data.record.attachments[0]}`;
+              const imageAttachment = data.record.images[0];
+              const imageURL = `${dbUrl}/api/files/${data.record.collectionId}/${data.record.id}/${data.record.images[0]}`;
               if (
                 imageAttachment !== "" &&
                 imageAttachment !== null &&
@@ -258,8 +521,7 @@ const ChatPage = () => {
     <View style={styles.container}>
       <GiftedChat
         messages={messages}
-        /*renderMessage={customtMessageBubble} Work in progress for the new style of the message bubbles, 
-        gotta make documents show up and render, not just images*/
+        renderMessage={renderMessage}
         renderUsernameOnMessage={true}
         showAvatarForEveryMessage={true}
         onSend={(newMessage) => handleSend(newMessage)}
@@ -289,10 +551,133 @@ const ChatPage = () => {
   );
 };
 
+const bubbleStyles = {
+  left: StyleSheet.create({
+    bubbleOuterContainer: {
+      alignSelf: "flex-start",
+    },
+    bubbleContainer: {
+      flex: 1,
+      alignItems: "flex-start",
+      padding: "3%",
+      borderRadius: 16,
+      backgroundColor: "#e5e5e5",
+    },
+    documentAttachmentsContainer: {
+      flexDirection: "column",
+    },
+    documentAttachment: {
+      backgroundColor: "lightblue",
+      padding: 10,
+      borderRadius: 16,
+      flexDirection: "row",
+      overflow: "hidden",
+      alignItems: "center",
+      marginVertical: 5,
+    },
+    documentAttachmentIcon: {
+      color: "black",
+    },
+    documentAttachmentText: { fontSize: 10 },
+    bubbleMessageWrapper: {
+      paddingTop: 5,
+    },
+    innerDocumentFileIconAndText: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    documentDownloadIcon: {
+      marginLeft: 10,
+    },
+    bubbleMessage: {
+      fontSize: 17,
+      marginTop: 10,
+    },
+    bubbleFooterWrapper: {
+      flex: 1,
+      flexDirection: "row",
+      justifyContent: "space-evenly",
+      marginTop: 3,
+    },
+    bubbleFooterText: {
+      color: "gray",
+      fontSize: 12,
+    },
+    bubbleFooterUsername: {
+      color: "gray",
+      fontSize: 12,
+    },
+  }),
+  right: StyleSheet.create({
+    bubbleOuterContainer: {
+      alignSelf: "flex-end",
+    },
+    bubbleContainer: {
+      flex: 1,
+      alignItems: "flex-start",
+      padding: "3%",
+      borderRadius: 16,
+      backgroundColor: "lightblue",
+    },
+    documentAttachmentsContainer: {
+      flexDirection: "column",
+    },
+    documentAttachment: {
+      backgroundColor: "#e5e5e5",
+      padding: 10,
+      borderRadius: 16,
+      alignItems: "center",
+      flexDirection: "row",
+      overflow: "hidden",
+      marginVertical: 5,
+      justifyContent: "space-between",
+    },
+    documentAttachmentIcon: {
+      color: "black",
+    },
+    innerDocumentFileIconAndText: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    documentDownloadIcon: {
+      marginLeft: 10,
+      alignSelf: "flex-end",
+    },
+    documentAttachmentText: { fontSize: 10 },
+    bubbleMessageWrapper: {
+      paddingTop: 5,
+    },
+    bubbleMessage: {
+      fontSize: 17,
+      marginTop: 10,
+      alignSelf: "flex-end",
+    },
+    bubbleFooterWrapper: {
+      flex: 1,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-end",
+      marginTop: 3,
+    },
+    bubbleFooterText: {
+      color: "white",
+      fontSize: 10,
+      textAlign: "right",
+      flex: 1,
+    },
+    bubbleFooterUsername: {
+      color: "white",
+      fontSize: 12,
+      display: "none",
+    },
+  }),
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
   addFileButton: {
     marginBottom: 10,
     paddingLeft: 10,
