@@ -52,6 +52,7 @@ const AppEntry = () => {
           setUser(pb.authStore.model);
           setIsLoggedIn(true);
           setAuthJWT(authJWT);
+          setHasTokenLoginFinished(true);
         } else {
           return;
         }
@@ -73,7 +74,7 @@ const AppEntry = () => {
     tryLoginFromAsyncStorage();
   }, []);
 
-  if (!fontsLoaded || !hasDbBeenSet) {
+  if (!fontsLoaded || !hasDbBeenSet || !hasTokenLoginFinished) {
     return <LoadingScreen />; // Or a loading screen
   }
 
