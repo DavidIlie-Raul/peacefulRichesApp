@@ -5,11 +5,11 @@ import {
   Text,
   Platform,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import {
   GiftedChat,
   Bubble,
-  BubbleProps,
   InputToolbar,
   Message,
 } from "react-native-gifted-chat";
@@ -43,14 +43,15 @@ const ChatPage = () => {
         result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
-          aspect: [3, 4],
+          aspect: [16, 9],
         });
         if (!result.canceled) {
           messageToSendToDB.append("images", {
             name: `images`,
             uri: result.assets[0].uri,
-            type: result.mimeType,
+            type: "images/jpeg",
           });
+          console.log(result);
         }
 
         break;
@@ -90,6 +91,61 @@ const ChatPage = () => {
           style={styles.addFileButton}
           onPress={handleAddAttachment}
         />
+      </View>
+    );
+  };
+
+  const customMessageImages = (props) => {
+    const { currentMessage, position } = props;
+    let isLeft;
+    if (position === "right") {
+      isLeft = false;
+    } else {
+      isLeft = true;
+    }
+
+    if (!props.currentMessage.image) {
+      return null; // or handle the case where images are not defined
+    }
+
+    const imgs = props.currentMessage.image.split(",");
+
+    return (
+      <View
+        style={
+          isLeft
+            ? bubbleStyles.left.imageAttachmentsContainer
+            : bubbleStyles.right.imageAttachmentsContainer
+        }
+      >
+        {imgs.map((img, index) => (
+          <View
+            key={index}
+            style={
+              isLeft
+                ? bubbleStyles.left.imageAttachmentContainer
+                : bubbleStyles.right.imageAttachmentContainer
+            }
+          >
+            <TouchableOpacity
+              onPress={() => {
+                SheetManager.show("image-viewer-sheet", {
+                  payload: { value: img.trim() },
+                });
+              }}
+            >
+              <Image
+                key={index}
+                source={{ uri: img.trim() }}
+                style={
+                  isLeft
+                    ? bubbleStyles.left.imageAttachment
+                    : bubbleStyles.right.imageAttachment
+                }
+              />
+            </TouchableOpacity>
+          </View>
+        ))}
       </View>
     );
   };
@@ -142,9 +198,6 @@ const ChatPage = () => {
     try {
       const downloadResult = await FileSystem.downloadAsync(url, uri);
       if (downloadResult.status === 200) {
-        console.log(downloadResult);
-        console.log("File downloaded to:", uri);
-        console.log(downloadResult.uri, document.name, downloadResult.mimeType);
         save(
           downloadResult.uri,
           document.name,
@@ -168,49 +221,95 @@ const ChatPage = () => {
   function renderMessage(props) {
     const { currentMessage } = props;
 
-    console.log(currentMessage.documents);
+    try {
+      // Assuming each attachment has a 'name' and 'itemId' property
+      const documents = currentMessage.documents;
 
-    // Check if the message has attachments
-    if (
-      currentMessage.documents !== undefined &&
-      currentMessage.documents.length > 0
-    ) {
-      try {
-        // Assuming each attachment has a 'name' and 'itemId' property
-        const documents = currentMessage.documents;
+      const CustomBubble = (props) => {
+        const { currentMessage, position } = props;
+        const imgs = currentMessage.image.split(",");
 
-        const CustomBubble = (props) => {
-          const { currentMessage, position } = props;
+        let hasDocs;
+        let hasImages;
 
-          let isLeft;
-          if (position === "left") {
-            isLeft = true;
-          } else {
-            isLeft = false;
-          }
-          console.log(isLeft);
+        if (
+          currentMessage.documents !== undefined &&
+          currentMessage.documents.length > 0
+        ) {
+          hasDocs = true;
+        } else {
+          hasDocs = false;
+        }
+        if (currentMessage.image === null || currentMessage.image === "") {
+          hasImages = false;
+        } else {
+          hasImages = true;
+        }
 
-          console.log("Current position", position);
-          if (
-            currentMessage.documents !== undefined &&
-            currentMessage.documents.length > 0
-          ) {
-            return (
+        let isLeft;
+        if (position === "left") {
+          isLeft = true;
+        } else {
+          isLeft = false;
+        }
+
+        return (
+          <>
+            <View
+              style={
+                isLeft
+                  ? bubbleStyles.left.bubbleOuterContainer
+                  : bubbleStyles.right.bubbleOuterContainer
+              }
+            >
               <View
                 style={
                   isLeft
-                    ? bubbleStyles.left.bubbleOuterContainer
-                    : bubbleStyles.right.bubbleOuterContainer
+                    ? bubbleStyles.left.bubbleContainer
+                    : bubbleStyles.right.bubbleContainer
                 }
               >
-                <View
-                  style={
-                    isLeft
-                      ? bubbleStyles.left.bubbleContainer
-                      : bubbleStyles.right.bubbleContainer
-                  }
-                >
-                  {/* Document Wrapper */}
+                {hasImages ? (
+                  <View
+                    style={
+                      isLeft
+                        ? bubbleStyles.left.imageAttachmentsContainer
+                        : bubbleStyles.right.imageAttachmentsContainer
+                    }
+                  >
+                    {imgs.map((img, index) => (
+                      <View
+                        key={index}
+                        style={
+                          isLeft
+                            ? bubbleStyles.left.imageAttachmentContainer
+                            : bubbleStyles.right.imageAttachmentContainer
+                        }
+                      >
+                        <TouchableOpacity
+                          onPress={() => {
+                            SheetManager.show("image-viewer-sheet", {
+                              payload: { value: img.trim() },
+                            });
+                          }}
+                        >
+                          <Image
+                            key={index}
+                            source={{ uri: img.trim() }}
+                            style={
+                              isLeft
+                                ? bubbleStyles.left.imageAttachment
+                                : bubbleStyles.right.imageAttachment
+                            }
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {/* Document Wrapper */}
+                {hasDocs ? (
                   <View
                     style={
                       isLeft
@@ -273,73 +372,69 @@ const ChatPage = () => {
                       </View>
                     ))}
                   </View>
-                  {/* Message Wrapper */}
-                  <View
+                ) : null}
+
+                {/* Message Wrapper */}
+                <View
+                  style={
+                    isLeft
+                      ? bubbleStyles.left.bubbleMessageWrapper
+                      : bubbleStyles.right.bubbleMessageWrapper
+                  }
+                >
+                  <Text
                     style={
                       isLeft
-                        ? bubbleStyles.left.bubbleMessageWrapper
-                        : bubbleStyles.right.bubbleMessageWrapper
+                        ? bubbleStyles.left.bubbleMessage
+                        : bubbleStyles.right.bubbleMessage
                     }
                   >
-                    <Text
-                      style={
-                        isLeft
-                          ? bubbleStyles.left.bubbleMessage
-                          : bubbleStyles.right.bubbleMessage
-                      }
-                    >
-                      {currentMessage.text}
-                    </Text>
-                  </View>
-                  {/* Footer Wrapper */}
-                  <View
+                    {currentMessage.text}
+                  </Text>
+                </View>
+                {/* Footer Wrapper */}
+                <View
+                  style={
+                    isLeft
+                      ? bubbleStyles.left.bubbleFooterWrapper
+                      : bubbleStyles.right.bubbleFooterWrapper
+                  }
+                >
+                  <Text
                     style={
                       isLeft
-                        ? bubbleStyles.left.bubbleFooterWrapper
-                        : bubbleStyles.right.bubbleFooterWrapper
+                        ? bubbleStyles.left.bubbleFooterUsername
+                        : bubbleStyles.right.bubbleFooterUsername
                     }
                   >
-                    <Text
-                      style={
-                        isLeft
-                          ? bubbleStyles.left.bubbleFooterUsername
-                          : bubbleStyles.right.bubbleFooterUsername
-                      }
-                    >
-                      ~ {currentMessage.user.name} {"  "}
-                    </Text>
-                    <Text
-                      style={
-                        isLeft
-                          ? bubbleStyles.left.bubbleFooterText
-                          : bubbleStyles.right.bubbleFooterText
-                      }
-                    >
-                      {"  "}
-                      {currentMessage.createdAt.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </Text>
-                  </View>
+                    ~ {currentMessage.user.name} {"  "}
+                  </Text>
+                  <Text
+                    style={
+                      isLeft
+                        ? bubbleStyles.left.bubbleFooterText
+                        : bubbleStyles.right.bubbleFooterText
+                    }
+                  >
+                    {"  "}
+                    {currentMessage.createdAt.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Text>
                 </View>
               </View>
-            );
-          }
+            </View>
+          </>
+        );
+      };
 
-          return <Bubble {...props}></Bubble>;
-        };
-        // Render each attachment
-        return <Message {...props} renderBubble={CustomBubble}></Message>;
-      } catch (error) {
-        console.error("Error in mapping document", error);
-        return;
-      }
+      // Render each attachment
+      return <Message {...props} renderBubble={CustomBubble}></Message>;
+    } catch (error) {
+      console.error("Error in mapping document", error);
+      return;
     }
-
-    console.log("No attachment");
-    // Render regular text messages
-    return <Message {...props} />;
   }
 
   useEffect(() => {
@@ -371,23 +466,27 @@ const ChatPage = () => {
             }
             return avatarToReturn;
           }
-          function getMessageImage() {
-            const imageAttachment = item.images[0];
-            console.log("ImageAttachment objects:", imageAttachment);
-            const imageURL = `${dbUrl}/api/files/${item.collectionId}/${item.id}/${item.images[0]}`;
+          function getMessageImages() {
+            let arrayOfImageLinks = [];
+            const imageAttachments = item.images;
+
+            for (const image of imageAttachments) {
+              const imageURL = `${dbUrl}/api/files/${item.collectionId}/${item.id}/${image}`;
+              arrayOfImageLinks.push(imageURL);
+            }
+            console.log("This is the array:", arrayOfImageLinks);
             if (
-              imageAttachment !== "" &&
-              imageAttachment !== null &&
-              imageAttachment !== undefined
+              imageAttachments !== "" &&
+              imageAttachments !== null &&
+              imageAttachments !== undefined
             ) {
-              return imageURL;
+              return arrayOfImageLinks.join(",");
             } else {
               return undefined;
             }
           }
           function getMessageDocuments() {
             const documentsArray = item.documents;
-            console.log("Docs Array for this message:", documentsArray);
 
             if (
               documentsArray !== "" &&
@@ -417,7 +516,7 @@ const ChatPage = () => {
               name: userThatSentMessage.username, // Modify this accordingly
               avatar: getAvatarImage(),
             },
-            image: getMessageImage(),
+            image: getMessageImages(),
             documents: getMessageDocuments(),
           };
           formattedMessages.push(formattedChatMessage);
@@ -471,6 +570,30 @@ const ChatPage = () => {
                 return undefined;
               }
             }
+
+            function getMessageDocuments() {
+              const documentsArray = data.record.documents;
+
+              if (
+                documentsArray !== "" &&
+                documentsArray !== null &&
+                documentsArray !== undefined
+              ) {
+                // Map each document name to an object with name and item ID
+                const documentsWithIds = documentsArray.map((documentName) => {
+                  return {
+                    name: documentName,
+                    itemId: data.record.id,
+                    // You may want to add other properties as needed
+                  };
+                });
+
+                return documentsWithIds;
+              } else {
+                return undefined;
+              }
+            }
+
             const newMessage = {
               _id: data.record.id,
               text: data.record.content,
@@ -481,6 +604,7 @@ const ChatPage = () => {
                 avatar: getNewAvatarImage(),
               },
               image: getNewMessageImage(),
+              documents: getMessageDocuments(),
             };
             setMessages((previousMessages) =>
               GiftedChat.append(previousMessages, [newMessage])
@@ -523,6 +647,8 @@ const ChatPage = () => {
         messages={messages}
         renderMessage={renderMessage}
         renderUsernameOnMessage={true}
+        alwaysShowSend={true}
+        renderMessageImage={(props) => customMessageImages(props)}
         showAvatarForEveryMessage={true}
         onSend={(newMessage) => handleSend(newMessage)}
         user={{
@@ -555,13 +681,36 @@ const bubbleStyles = {
   left: StyleSheet.create({
     bubbleOuterContainer: {
       alignSelf: "flex-start",
+      maxWidth: "80%",
     },
     bubbleContainer: {
       flex: 1,
       alignItems: "flex-start",
       padding: "3%",
       borderRadius: 16,
+      borderBottomLeftRadius: 3,
       backgroundColor: "#e5e5e5",
+    },
+    imageAttachmentsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-evenly",
+      alignItems: "center",
+      alignSelf: "center",
+      minWidth: "50%",
+    },
+    imageAttachmentContainer: {
+      flex: 1,
+      aspectRatio: 1,
+      padding: 5,
+      overflow: "hidden",
+      minWidth: "50%",
+    },
+    imageAttachment: {
+      width: "100%",
+      height: "100%",
+      resizeMode: "cover",
+      borderRadius: 16,
     },
     documentAttachmentsContainer: {
       flexDirection: "column",
@@ -591,7 +740,8 @@ const bubbleStyles = {
     },
     bubbleMessage: {
       fontSize: 17,
-      marginTop: 10,
+      marginLeft: 5,
+      flexWrap: "wrap",
     },
     bubbleFooterWrapper: {
       flex: 1,
@@ -611,13 +761,37 @@ const bubbleStyles = {
   right: StyleSheet.create({
     bubbleOuterContainer: {
       alignSelf: "flex-end",
+      maxWidth: "80%",
     },
     bubbleContainer: {
       flex: 1,
       alignItems: "flex-start",
       padding: "3%",
       borderRadius: 16,
+      borderBottomRightRadius: 3,
       backgroundColor: "lightblue",
+      minWidth: "20%",
+    },
+    imageAttachmentsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-evenly",
+      alignItems: "center",
+      alignSelf: "center",
+      minWidth: "50%",
+    },
+    imageAttachmentContainer: {
+      flex: 1,
+      aspectRatio: 1,
+      padding: 5,
+      overflow: "hidden",
+      minWidth: "50%",
+    },
+    imageAttachment: {
+      width: "100%",
+      height: "100%",
+      resizeMode: "cover",
+      borderRadius: 16,
     },
     documentAttachmentsContainer: {
       flexDirection: "column",
@@ -649,7 +823,7 @@ const bubbleStyles = {
     },
     bubbleMessage: {
       fontSize: 17,
-      marginTop: 10,
+      marginLeft: 5,
       alignSelf: "flex-end",
     },
     bubbleFooterWrapper: {
