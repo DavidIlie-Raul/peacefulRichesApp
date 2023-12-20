@@ -41,6 +41,7 @@ const AppEntry = () => {
 
     if (!authJWT) {
       console.log(authJWT);
+      setHasTokenLoginFinished(true);
       return;
     } else if (authJWT) {
       console.log(authJWT);
