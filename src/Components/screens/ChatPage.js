@@ -557,17 +557,23 @@ const ChatPage = () => {
               }
               return avatarToReturn;
             }
-            function getNewMessageImage() {
-              const imageAttachment = data.record.images[0];
-              const imageURL = `${dbUrl}/api/files/${data.record.collectionId}/${data.record.id}/${data.record.images[0]}`;
+            function getNewMessageImages() {
+              let arrayOfImageLinks = [];
+              const imageAttachments = data.record.images;
+
+              for (const image of imageAttachments) {
+                const imageURL = `${dbUrl}/api/files/${data.record.collectionId}/${data.record.id}/${image}`;
+                arrayOfImageLinks.push(imageURL);
+              }
+              console.log("This is the array:", arrayOfImageLinks);
               if (
-                imageAttachment !== "" &&
-                imageAttachment !== null &&
-                imageAttachment !== undefined
+                imageAttachments !== "" &&
+                imageAttachments !== null &&
+                imageAttachments !== undefined
               ) {
-                return imageURL;
+                return arrayOfImageLinks.join(",");
               } else {
-                return undefined;
+                return null;
               }
             }
 
@@ -603,7 +609,7 @@ const ChatPage = () => {
                 name: userThatSentMessage.username, // Modify this accordingly
                 avatar: getNewAvatarImage(),
               },
-              image: getNewMessageImage(),
+              image: getNewMessageImages(),
               documents: getMessageDocuments(),
             };
             setMessages((previousMessages) =>
